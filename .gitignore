@@ -43,3 +43,6 @@ build/
 
 # target
 target/*
+
+# no añadir .idea
+.idea/
