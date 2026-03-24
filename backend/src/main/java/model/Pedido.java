@@ -1,3 +1,7 @@
 package model;
 
-public record Pedido(){}
+import java.time.LocalDate;
+
+
+public record Pedido(int id, Cuenta cuenta, PedidoEstado pedidoEstado, LocalDate localDate){}
+

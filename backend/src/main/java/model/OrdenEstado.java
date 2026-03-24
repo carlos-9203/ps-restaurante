@@ -1,6 +1,6 @@
 package model;
 
-public enum Estado {
+public enum OrdenEstado {
     Pendiente,
     Preparación,
     Listo
