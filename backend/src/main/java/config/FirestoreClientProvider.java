@@ -1,4 +1,4 @@
-package repository;
+package config;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.cloud.FirestoreClient;

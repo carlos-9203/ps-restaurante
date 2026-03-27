@@ -5,6 +5,7 @@ import com.google.cloud.firestore.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import config.FirestoreClientProvider;
 import model.Categoria;
 import model.Plato;
 

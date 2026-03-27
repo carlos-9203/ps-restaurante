@@ -2,6 +2,7 @@ package repository;
 
 import com.google.cloud.firestore.*;
 
+import config.FirestoreClientProvider;
 import model.Pedido;
 
 public class PedidoRepository {
