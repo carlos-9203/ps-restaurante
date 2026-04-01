@@ -16,7 +16,6 @@ public class FirebaseConfig {
 
                 var serviceAccount =
                         FirebaseConfig.class
-                                .getClassLoader()
                                 .getResourceAsStream("firebase-key.json");
 
                 FirebaseOptions options = FirebaseOptions.builder()

@@ -7,6 +7,7 @@ import model.Plato;
 import repository.interfaces.PlatoRepository;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -45,13 +46,14 @@ public class FirestorePlatoRepository extends AbstractFirestoreRepository<Plato>
         // We multiply the BigDecimal by 100 and store it as a Long (cents)
         long priceInCents = plato.price().movePointRight(2).longValue();
         
-        return Map.of(
-            "nombre", plato.nombre(),
-            "categoria", plato.categoria().name(),
-            "descripcion", plato.descripcion(),
-            "price", priceInCents, 
-            "activo", plato.activo()
-        );
+        Map<String, Object> map = new HashMap<>();
+        map.put("nombre", plato.nombre());
+        map.put("categoria", plato.categoria().name());
+        map.put("descripcion", plato.descripcion());
+        map.put("price", priceInCents);
+        map.put("activo", plato.activo());
+        
+        return map;
     }
 
     @Override
