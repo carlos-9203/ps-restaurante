@@ -1,10 +1,9 @@
-package repository.firestore;
-
 import config.FirebaseConfig;
 import com.google.cloud.firestore.Firestore;
 import model.Categoria;
 import model.Plato;
 import org.junit.jupiter.api.*;
+import repository.firestore.FirestorePlatoRepository;
 
 import java.math.BigDecimal;
 import java.util.Optional;

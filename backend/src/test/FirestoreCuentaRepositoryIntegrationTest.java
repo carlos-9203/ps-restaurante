@@ -1,11 +1,10 @@
-package repository.firestore;
-
 import config.FirebaseConfig;
 import com.google.cloud.firestore.Firestore;
 import model.Cuenta;
 import model.Mesa;
 import model.Reserva;
 import org.junit.jupiter.api.*;
+import repository.firestore.FirestoreCuentaRepository;
 
 import java.time.Instant;
 import java.util.List;
