@@ -15,8 +15,7 @@ public class FirebaseConfig {
             if (FirebaseApp.getApps().isEmpty()) {
 
                 var serviceAccount =
-                        FirebaseConfig.class
-                                .getResourceAsStream("firebase-key.json");
+                        FirebaseConfig.class.getClassLoader().getResourceAsStream("firebase-key.json");
 
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(
