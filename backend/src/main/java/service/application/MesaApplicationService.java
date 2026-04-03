@@ -4,10 +4,10 @@ import model.Cuenta;
 import model.Mesa;
 import model.Orden;
 import model.Pedido;
-import repository.firestore.FirestoreCuentaRepository;
-import repository.firestore.FirestoreMesaRepository;
-import repository.firestore.FirestoreOrdenRepository;
-import repository.firestore.FirestorePedidoRepository;
+import repository.interfaces.CuentaRepository;
+import repository.interfaces.MesaRepository;
+import repository.interfaces.OrdenRepository;
+import repository.interfaces.PedidoRepository;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -16,16 +16,16 @@ import java.util.Optional;
 
 public class MesaApplicationService {
 
-    private final FirestoreMesaRepository mesaRepository;
-    private final FirestoreCuentaRepository cuentaRepository;
-    private final FirestorePedidoRepository pedidoRepository;
-    private final FirestoreOrdenRepository ordenRepository;
+    private final MesaRepository mesaRepository;
+    private final CuentaRepository cuentaRepository;
+    private final PedidoRepository pedidoRepository;
+    private final OrdenRepository ordenRepository;
 
     public MesaApplicationService(
-            FirestoreMesaRepository mesaRepository,
-            FirestoreCuentaRepository cuentaRepository,
-            FirestorePedidoRepository pedidoRepository,
-            FirestoreOrdenRepository ordenRepository
+            MesaRepository mesaRepository,
+            CuentaRepository cuentaRepository,
+            PedidoRepository pedidoRepository,
+            OrdenRepository ordenRepository
     ) {
         this.mesaRepository = mesaRepository;
         this.cuentaRepository = cuentaRepository;
