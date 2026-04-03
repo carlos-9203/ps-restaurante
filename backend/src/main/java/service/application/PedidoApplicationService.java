@@ -17,13 +17,13 @@ public class PedidoApplicationService {
     private final PedidoRepository pedidoRepository;
     private final CuentaRepository cuentaRepository;
     private final OrdenRepository ordenRepository;
-    private final MesaApplicationService mesaApplicationService;
+    private final service.MesaApplicationService mesaApplicationService;
 
     public PedidoApplicationService(
             PedidoRepository pedidoRepository,
             CuentaRepository cuentaRepository,
             OrdenRepository ordenRepository,
-            MesaApplicationService mesaApplicationService
+            service.MesaApplicationService mesaApplicationService
     ) {
         this.pedidoRepository = pedidoRepository;
         this.cuentaRepository = cuentaRepository;
@@ -31,9 +31,6 @@ public class PedidoApplicationService {
         this.mesaApplicationService = mesaApplicationService;
     }
 
-    /**
-     * Crea un pedido en la cuenta activa de una mesa.
-     */
     public Pedido crearPedidoDesdeMesa(String mesaId) {
         Cuenta cuenta = mesaApplicationService.obtenerCuentaActivaDeMesa(mesaId)
                 .orElseThrow(() -> new IllegalArgumentException("La mesa no tiene cuenta activa"));
@@ -41,9 +38,6 @@ public class PedidoApplicationService {
         return crearPedidoEnCuenta(cuenta.id());
     }
 
-    /**
-     * Crea un pedido en una cuenta concreta.
-     */
     public Pedido crearPedidoEnCuenta(String cuentaId) {
         Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new IllegalArgumentException("La cuenta no existe"));
@@ -62,17 +56,11 @@ public class PedidoApplicationService {
         return pedidoRepository.save(nuevoPedido);
     }
 
-    /**
-     * Devuelve un pedido por id.
-     */
     public Pedido obtenerPedidoPorId(String pedidoId) {
         return pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
     }
 
-    /**
-     * Devuelve todos los pedidos de una cuenta.
-     */
     public List<Pedido> obtenerPedidosDeCuenta(String cuentaId) {
         Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new IllegalArgumentException("La cuenta no existe"));
@@ -84,9 +72,6 @@ public class PedidoApplicationService {
                 .toList();
     }
 
-    /**
-     * Devuelve los pedidos de la cuenta activa de una mesa.
-     */
     public List<Pedido> obtenerPedidosActivosDeMesa(String mesaId) {
         Cuenta cuenta = mesaApplicationService.obtenerCuentaActivaDeMesa(mesaId)
                 .orElseThrow(() -> new IllegalArgumentException("La mesa no tiene cuenta activa"));
@@ -94,10 +79,6 @@ public class PedidoApplicationService {
         return obtenerPedidosDeCuenta(cuenta.id());
     }
 
-    /**
-     * Un pedido está listo si todas sus órdenes están en estado Listo.
-     * Si no tiene órdenes, se mantiene Pendiente.
-     */
     public Pedido recalcularEstadoPedido(String pedidoId) {
         Pedido pedido = obtenerPedidoPorId(pedidoId);
 
@@ -120,9 +101,6 @@ public class PedidoApplicationService {
         return pedidoRepository.update(pedido.id(), actualizado);
     }
 
-    /**
-     * Devuelve true si el pedido está listo.
-     */
     public boolean pedidoEstaListo(String pedidoId) {
         Pedido pedido = obtenerPedidoPorId(pedidoId);
         return pedido.pedidoEstado() == PedidoEstado.Listo;

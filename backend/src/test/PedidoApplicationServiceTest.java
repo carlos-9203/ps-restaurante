@@ -12,7 +12,7 @@ import repository.interfaces.CuentaRepository;
 import repository.interfaces.MesaRepository;
 import repository.interfaces.OrdenRepository;
 import repository.interfaces.PedidoRepository;
-import service.application.MesaApplicationService;
+import service.MesaApplicationService;
 import service.application.PedidoApplicationService;
 
 import java.math.BigDecimal;

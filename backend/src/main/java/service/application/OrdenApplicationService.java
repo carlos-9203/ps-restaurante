@@ -1,4 +1,4 @@
-package service.application;
+package service;
 
 import model.Orden;
 import model.OrdenEstado;
@@ -7,6 +7,7 @@ import model.Plato;
 import repository.interfaces.OrdenRepository;
 import repository.interfaces.PedidoRepository;
 import repository.interfaces.PlatoRepository;
+import service.application.PedidoApplicationService;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -31,9 +32,6 @@ public class OrdenApplicationService {
         this.pedidoApplicationService = pedidoApplicationService;
     }
 
-    /**
-     * Crea una única orden a partir de un pedido y un plato.
-     */
     public Orden crearOrdenDesdePedidoYPlato(String pedidoId, String platoId, String detalles) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
@@ -54,18 +52,10 @@ public class OrdenApplicationService {
         return ordenRepository.save(orden);
     }
 
-    /**
-     * Crea varias órdenes a partir de un pedido.
-     * Cada platoId genera una orden.
-     */
     public List<Orden> crearOrdenesDesdePedido(String pedidoId, List<String> platosIds) {
         return crearOrdenesDesdePedido(pedidoId, platosIds, null);
     }
 
-    /**
-     * Crea varias órdenes a partir de un pedido.
-     * Si se pasan detalles, se usan por posición.
-     */
     public List<Orden> crearOrdenesDesdePedido(String pedidoId, List<String> platosIds, List<String> detalles) {
         if (platosIds == null || platosIds.isEmpty()) {
             throw new IllegalArgumentException("Debes indicar al menos un plato");
@@ -89,17 +79,11 @@ public class OrdenApplicationService {
         return ordenes;
     }
 
-    /**
-     * Devuelve una orden por id.
-     */
     public Orden obtenerOrdenPorId(String ordenId) {
         return ordenRepository.findById(ordenId)
                 .orElseThrow(() -> new IllegalArgumentException("La orden no existe"));
     }
 
-    /**
-     * Devuelve todas las órdenes de un pedido.
-     */
     public List<Orden> obtenerOrdenesDePedido(String pedidoId) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
@@ -111,36 +95,24 @@ public class OrdenApplicationService {
                 .toList();
     }
 
-    /**
-     * Devuelve todas las órdenes pendientes.
-     */
     public List<Orden> obtenerOrdenesPendientes() {
         return ordenRepository.findAll().stream()
                 .filter(orden -> orden.ordenEstado() == OrdenEstado.Pendiente)
                 .toList();
     }
 
-    /**
-     * Devuelve todas las órdenes en preparación.
-     */
     public List<Orden> obtenerOrdenesEnPreparacion() {
         return ordenRepository.findAll().stream()
                 .filter(orden -> orden.ordenEstado() == OrdenEstado.Preparación)
                 .toList();
     }
 
-    /**
-     * Devuelve todas las órdenes listas.
-     */
     public List<Orden> obtenerOrdenesListas() {
         return ordenRepository.findAll().stream()
                 .filter(orden -> orden.ordenEstado() == OrdenEstado.Listo)
                 .toList();
     }
 
-    /**
-     * Cambia una orden a Pendiente.
-     */
     public Orden marcarOrdenPendiente(String ordenId) {
         Orden orden = obtenerOrdenPorId(ordenId);
 
@@ -159,9 +131,6 @@ public class OrdenApplicationService {
         return guardada;
     }
 
-    /**
-     * Cambia una orden a Preparación.
-     */
     public Orden marcarOrdenEnPreparacion(String ordenId) {
         Orden orden = obtenerOrdenPorId(ordenId);
 
@@ -180,9 +149,6 @@ public class OrdenApplicationService {
         return guardada;
     }
 
-    /**
-     * Cambia una orden a Listo.
-     */
     public Orden marcarOrdenLista(String ordenId) {
         Orden orden = obtenerOrdenPorId(ordenId);
 
@@ -201,13 +167,10 @@ public class OrdenApplicationService {
         return guardada;
     }
 
-    /**
-     * Devuelve true si todas las órdenes del pedido están listas.
-     */
     public boolean estanTodasListasLasOrdenes(String pedidoId) {
         List<Orden> ordenes = obtenerOrdenesDePedido(pedidoId);
 
-        return !ordenes.isEmpty() &&
-                ordenes.stream().allMatch(orden -> orden.ordenEstado() == OrdenEstado.Listo);
+        return !ordenes.isEmpty()
+                && ordenes.stream().allMatch(orden -> orden.ordenEstado() == OrdenEstado.Listo);
     }
 }

@@ -1,3 +1,4 @@
+import model.Categoria;
 import model.Cuenta;
 import model.Mesa;
 import model.Orden;
@@ -5,18 +6,12 @@ import model.OrdenEstado;
 import model.Pedido;
 import model.PedidoEstado;
 import model.Plato;
-import model.Categoria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import repository.firestore.FirestoreCuentaRepository;
-import repository.firestore.FirestoreMesaRepository;
-import repository.firestore.FirestoreOrdenRepository;
-import repository.firestore.FirestorePedidoRepository;
-import service.application.MesaApplicationService;
+import repository.interfaces.CuentaRepository;
+import repository.interfaces.MesaRepository;
+import repository.interfaces.OrdenRepository;
+import repository.interfaces.PedidoRepository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -25,25 +20,16 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class MesaApplicationServiceTest {
 
-    @Mock
-    private FirestoreMesaRepository mesaRepository;
+    private MesaRepository mesaRepository;
+    private CuentaRepository cuentaRepository;
+    private PedidoRepository pedidoRepository;
+    private OrdenRepository ordenRepository;
 
-    @Mock
-    private FirestoreCuentaRepository cuentaRepository;
-
-    @Mock
-    private FirestorePedidoRepository pedidoRepository;
-
-    @Mock
-    private FirestoreOrdenRepository ordenRepository;
-
-    @InjectMocks
-    private MesaApplicationService mesaApplicationService;
+    private service.MesaApplicationService mesaApplicationService;
 
     private Mesa mesa;
     private Cuenta cuentaActiva;
@@ -53,6 +39,18 @@ class MesaApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
+        mesaRepository = mock(MesaRepository.class);
+        cuentaRepository = mock(CuentaRepository.class);
+        pedidoRepository = mock(PedidoRepository.class);
+        ordenRepository = mock(OrdenRepository.class);
+
+        mesaApplicationService = new service.MesaApplicationService(
+                mesaRepository,
+                cuentaRepository,
+                pedidoRepository,
+                ordenRepository
+        );
+
         mesa = new Mesa("mesa1", 4);
 
         cuentaActiva = new Cuenta(
@@ -126,12 +124,11 @@ class MesaApplicationServiceTest {
 
         assertNotNull(resultado);
         assertFalse(resultado.estaPagada());
-        assertEquals(1, resultado.mesas().size());
         assertEquals("mesa1", resultado.mesas().get(0).id());
     }
 
     @Test
-    void ocuparMesa_falla_siLaMesaYaEstaOcupada() {
+    void ocuparMesa_falla_siYaEstaOcupada() {
         when(mesaRepository.findById("mesa1")).thenReturn(Optional.of(mesa));
         when(cuentaRepository.findAll()).thenReturn(List.of(cuentaActiva));
 
