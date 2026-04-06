@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { QrGenerator } from './qr-generator';
+import { Header } from './header';
 
-describe('QrGenerator', () => {
-  let component: QrGenerator;
-  let fixture: ComponentFixture<QrGenerator>;
+describe('Header', () => {
+  let component: Header;
+  let fixture: ComponentFixture<Header>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [QrGenerator],
+      imports: [Header],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(QrGenerator);
+    fixture = TestBed.createComponent(Header);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

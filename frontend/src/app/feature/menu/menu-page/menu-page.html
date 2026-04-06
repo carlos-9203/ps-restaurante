@@ -1,0 +1,20 @@
+<div class="menu-layout">
+  <app-header></app-header>
+
+  <main class="menu-content">
+    <div class="platos-grid">
+      @for (plato of platos(); track plato) {
+        <div class="plato-card">
+          <div class="plato-img-placeholder">
+            <span class="icon">🖼️</span>
+          </div>
+          <div class="plato-title">
+            Forem ipsum
+          </div>
+        </div>
+      }
+    </div>
+  </main>
+
+  <footer class="app-footer"></footer>
+</div>

@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { QrGenerator } from './qr-generator';
+import { MenuPage } from './menu-page';
 
-describe('QrGenerator', () => {
-  let component: QrGenerator;
-  let fixture: ComponentFixture<QrGenerator>;
+describe('MenuPage', () => {
+  let component: MenuPage;
+  let fixture: ComponentFixture<MenuPage>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [QrGenerator],
+      imports: [MenuPage],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(QrGenerator);
+    fixture = TestBed.createComponent(MenuPage);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

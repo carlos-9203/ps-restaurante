@@ -1,0 +1,54 @@
+.menu-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #E6D3B8; /* Color beige de fondo principal */
+}
+
+.menu-content {
+  flex: 1; /* Esto empuja el footer hacia abajo */
+  padding: 30px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.platos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas iguales */
+  gap: 20px;
+  width: 100%;
+  max-width: 600px; /* Para que no se estire demasiado en pantallas grandes */
+}
+
+.plato-card {
+  background-color: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.plato-img-placeholder {
+  background-color: #e0e0e0;
+  aspect-ratio: 4 / 5; /* proporción vertical */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #999;
+}
+
+.plato-title {
+  background-color: #d6d6d6;
+  text-align: center;
+  padding: 8px 5px;
+  font-size: 0.8rem;
+  font-family: sans-serif;
+  color: #333;
+}
+
+.app-footer {
+  height: 60px;
+  background-color: #D4B596;
+}

@@ -1,0 +1,41 @@
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #D4B596; /* Color marrón claro del diseño */
+  padding: 10px 20px;
+  height: 80px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logo-container {
+  flex: 1;
+}
+
+.logo {
+  height: 60px;
+  /* Si no tienes logo aún, puedes simularlo con un div gris */
+  background-color: #555;
+  width: 60px;
+  border-radius: 50%;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #333;
+  font-family: sans-serif;
+  font-size: 0.9rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.nav-links a.active {
+  font-weight: bold;
+  color: #000;
+}
