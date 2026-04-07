@@ -16,13 +16,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class MesaApplicationService {
-
     private final MesaRepository mesaRepository;
     private final CuentaRepository cuentaRepository;
     private final PedidoRepository pedidoRepository;
     private final OrdenRepository ordenRepository;
 
-    private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
     public MesaApplicationService(
@@ -123,6 +121,20 @@ public class MesaApplicationService {
         }
 
         return ordenes;
+    }
+
+    public Cuenta validarAccesoMesa(String mesaId, String password) {
+        Cuenta cuentaActiva = obtenerCuentaActivaDeMesa(mesaId)
+                .orElseThrow(() -> new IllegalArgumentException("La mesa no tiene cuenta activa"));
+
+        String passwordGuardada = cuentaActiva.password() == null ? "" : cuentaActiva.password().trim();
+        String passwordRecibida = password == null ? "" : password.trim();
+
+        if (!passwordGuardada.equals(passwordRecibida)) {
+            throw new IllegalArgumentException("La contraseña no es correcta");
+        }
+
+        return cuentaActiva;
     }
 
     private String generarPassword() {

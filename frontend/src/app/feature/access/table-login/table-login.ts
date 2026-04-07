@@ -2,25 +2,25 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { MesasApiService } from '../../../services/mesas-api.service';
 
 @Component({
   selector: 'app-table-login',
   standalone: true,
-  // Esta línea de imports soluciona el error de "Can't bind to 'formGroup'"
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './table-login.html',
   styleUrls: ['./table-login.css'],
 })
 export class TableLogin implements OnInit {
-  // <-- Tu clase se llama TableLogin
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private mesasApiService = inject(MesasApiService);
 
-  // Aquí definimos las variables que el HTML está buscando
   tableId = signal<string | null>(null);
   errorMessage = signal<string | null>(null);
-  isLoading = signal<boolean>(false);
+  isLoading = signal(false);
 
   loginForm = this.fb.group({
     password: ['', [Validators.required]],
@@ -32,22 +32,37 @@ export class TableLogin implements OnInit {
   }
 
   onSubmit() {
-    if (this.loginForm.valid) {
-      this.isLoading.set(true);
-      this.errorMessage.set(null);
-
-      const password = this.loginForm.value.password;
-      const mesa = this.tableId();
-
-      // Simulamos que comprueba con el backend
-      setTimeout(() => {
-        if (password === '1234') {
-          this.router.navigate(['/menu', mesa]);
-        } else {
-          this.errorMessage.set('La contraseña no es correcta.');
-          this.isLoading.set(false);
-        }
-      }, 1000);
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
     }
+
+    const mesaId = this.tableId();
+    const password = this.loginForm.get('password')?.value?.trim() ?? '';
+
+    if (!mesaId) {
+      this.errorMessage.set('No se ha encontrado la mesa.');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    this.mesasApiService.validarAccesoMesa(mesaId, password).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.router.navigate(['/menu', mesaId]);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isLoading.set(false);
+
+        const backendMessage =
+          typeof error.error?.message === 'string'
+            ? error.error.message
+            : 'La contraseña no es correcta.';
+
+        this.errorMessage.set(backendMessage);
+      },
+    });
   }
 }

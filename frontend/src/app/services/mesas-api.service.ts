@@ -27,12 +27,22 @@ export class MesasApiService {
     return this.http.post<CuentaApi>(`${this.apiUrl}/cuentas/${cuentaId}/pagar-total`, {});
   }
 
-  ocuparMesa(id: string): Observable<unknown> {
-    return this.http.post(`${this.apiUrl}/mesas/${id}/ocupar`, {});
+  ocuparMesa(id: string): Observable<CuentaApi> {
+    return this.http.post<CuentaApi>(`${this.apiUrl}/mesas/${id}/ocupar`, {});
   }
 
-  liberarMesa(id: string): Observable<unknown> {
-    return this.http.post(`${this.apiUrl}/mesas/${id}/liberar`, {});
+  liberarMesa(id: string): Observable<CuentaApi> {
+    return this.http.post<CuentaApi>(`${this.apiUrl}/mesas/${id}/liberar`, {});
+  }
+
+  validarAccesoMesa(
+    mesaId: string,
+    password: string
+  ): Observable<{ mesaId: string; cuentaId: string; accesoValido: boolean }> {
+    return this.http.post<{ mesaId: string; cuentaId: string; accesoValido: boolean }>(
+      `${this.apiUrl}/mesas/${mesaId}/validar-acceso`,
+      { password }
+    );
   }
 
   cargarMesasParaVista(): Observable<Mesa[]> {
@@ -49,9 +59,7 @@ export class MesasApiService {
 
             const cuentaActiva =
               cuentas.find(
-                (cuenta) =>
-                  !cuenta.payed &&
-                  cuenta.mesas?.some((mesa) => mesa.id === mesaDb.id)
+                (cuenta) => !cuenta.payed && cuenta.mesas?.some((mesa) => mesa.id === mesaDb.id)
               ) ?? null;
 
             return {

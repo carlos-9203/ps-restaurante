@@ -11,12 +11,12 @@ import service.MesaService;
 import util.ApiError;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class MesaController {
-
     private final MesaService service;
     private final MesaApplicationService applicationService;
 
@@ -98,6 +98,31 @@ public class MesaController {
                                 ctx.json(cuenta.get());
                             } else {
                                 ctx.status(404).json(new ApiError("La mesa no tiene cuenta activa"));
+                            }
+                        });
+                    });
+
+                    path("validar-acceso", () -> {
+                        post(ctx -> {
+                            String id = ctx.pathParam("id");
+
+                            try {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> body = ctx.bodyAsClass(Map.class);
+
+                                String password = body.get("password") != null
+                                        ? body.get("password").toString()
+                                        : "";
+
+                                Cuenta cuenta = applicationService.validarAccesoMesa(id, password);
+
+                                ctx.json(Map.of(
+                                        "mesaId", id,
+                                        "cuentaId", cuenta.id(),
+                                        "accesoValido", true
+                                ));
+                            } catch (IllegalArgumentException e) {
+                                ctx.status(400).json(new ApiError(e.getMessage()));
                             }
                         });
                     });
