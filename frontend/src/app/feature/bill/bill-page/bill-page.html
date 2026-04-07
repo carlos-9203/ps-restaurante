@@ -1,0 +1,32 @@
+<div class="bill-layout">
+  <app-header></app-header>
+
+  <main class="bill-content">
+
+    <div class="bill-header-row">
+      <span class="col-desc">DESCRIPCIÓN</span>
+      <span class="col-cant">CANTIDAD</span>
+      <span class="col-precio">PRECIO</span>
+    </div>
+
+    <div class="items-list">
+      @for (item of pedidos(); track $index) {
+        <div class="bill-row">
+          <span class="col-desc">{{ item.nombre }}</span>
+          <span class="col-cant">x{{ item.cantidad }}</span>
+          <span class="col-precio">{{ item.cantidad * item.precioUnitario | number:'1.0-2' }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="bill-total">
+      <span>TOTAL A PAGAR:</span>
+      <span>{{ total() | number:'1.2-2' }} €</span>
+    </div>
+  </main>
+
+  <footer class="bill-footer">
+    <button class="btn-footer active-btn">Pagar total</button>
+    <button class="btn-footer">Cuenta dividida</button>
+  </footer>
+</div>
