@@ -144,3 +144,36 @@
     width: 95%; /* Hace la píldora un pelín más ancha para que los botones de + y - no se aplasten */
   }
 }
+
+.barra-pedido-flotante {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  padding: 15px 20px;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: center;
+  z-index: 50;
+  box-sizing: border-box;
+}
+
+.btn-realizar-pedido {
+  width: 100%;
+  max-width: 400px;
+  background-color: #D4B596;
+  color: #000;
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.btn-realizar-pedido:active {
+  transform: scale(0.98);
+}

@@ -34,4 +34,12 @@
   </main>
 
   <footer class="app-footer"></footer>
+
+  @if (totalSeleccionado() > 0) {
+    <div class="barra-pedido-flotante">
+      <button class="btn-realizar-pedido" (click)="enviarPedido()">
+        REALIZAR PEDIDO ({{ totalSeleccionado() }})
+      </button>
+    </div>
+  }
 </div>

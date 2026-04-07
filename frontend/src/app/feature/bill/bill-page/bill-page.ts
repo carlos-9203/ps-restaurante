@@ -1,18 +1,7 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Header } from '../../../shared/components/header/header';
-
-interface SubItem {
-  id: string;
-  seleccionado: boolean;
-}
-
-interface ItemCuenta {
-  nombre: string;
-  cantidad: number;
-  precioUnitario: number;
-  subItems: SubItem[];
-}
+import { OrderService } from '../../../shared/services/order';
 
 @Component({
   selector: 'app-bill-page',
@@ -26,24 +15,9 @@ export class BillPage {
   viewMode = signal<'normal' | 'dividida'>('normal');
   showDetailPopup = signal<boolean>(false);
 
-  // Datos simulados, lo que el cliente ha pedido
-  pedidos = signal<ItemCuenta[]>([
-    { nombre: 'Sorem ipsum dolor sit amet.', cantidad: 2, precioUnitario: 4.85, subItems: this.crearSubItems(4) },
-    { nombre: 'Sorem ipsum dolor sit amet.', cantidad: 2, precioUnitario: 1.65, subItems: this.crearSubItems(2) },
-    { nombre: 'Sorem ipsum dolor sit amet.', cantidad: 1, precioUnitario: 5.0, subItems: this.crearSubItems(1) },
-    { nombre: 'Sorem ipsum dolor sit amet.', cantidad: 1, precioUnitario: 13.22, subItems: this.crearSubItems(1) },
-    { nombre: 'Sorem ipsum dolor sit amet.', cantidad: 3, precioUnitario: 5.1, subItems: this.crearSubItems(3) },
-    { nombre: 'Sorem ipsum dolor sit amet.', cantidad: 2, precioUnitario: 3.85, subItems: this.crearSubItems(2) },
-    { nombre: 'Sorem ipsum dolor sit amet.', cantidad: 5, precioUnitario: 3.27, subItems: this.crearSubItems(5)  },
-  ]);
-
-  // función aux para generar los checkboxes según la cantidad
-  private crearSubItems(cantidad: number): SubItem[] {
-    return Array.from({ length: cantidad }, () => ({
-      id: Math.random().toString(36).substr(2, 9),
-      seleccionado: false,
-    }));
-  }
+  private orderService = inject(OrderService)
+  // Obtenemos los platos que el cliente ha pedido
+  pedidos = this.orderService.pedidosConfirmados;
 
   // Vista normal (no diviida)
   totalNormal = computed(() => {
