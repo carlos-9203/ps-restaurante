@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MesasApiService } from '../../../services/mesas-api.service';
+import { TableSessionService } from '../../../services/table-session.service';
 
 @Component({
   selector: 'app-table-login',
@@ -17,6 +18,7 @@ export class TableLogin implements OnInit {
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private mesasApiService = inject(MesasApiService);
+  private tableSessionService = inject(TableSessionService);
 
   tableId = signal<string | null>(null);
   errorMessage = signal<string | null>(null);
@@ -49,8 +51,11 @@ export class TableLogin implements OnInit {
     this.errorMessage.set(null);
 
     this.mesasApiService.validarAccesoMesa(mesaId, password).subscribe({
-      next: () => {
+      next: (response) => {
         this.isLoading.set(false);
+
+        this.tableSessionService.guardarSesion(response.mesaId, response.cuentaId);
+
         this.router.navigate(['/menu', mesaId]);
       },
       error: (error: HttpErrorResponse) => {
