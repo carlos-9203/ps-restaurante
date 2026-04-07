@@ -7,6 +7,7 @@ import { TableLogin } from './feature/access/table-login/table-login';
 import { QrGenerator } from './feature/admin/qr-generator/qr-generator';
 import { MenuPage } from './feature/menu/menu-page/menu-page';
 import { BillPage } from './feature/bill/bill-page/bill-page';
+import { TableroPedidos } from './pages/cocina/tablero-pedidos';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'mesas', pathMatch: 'full' },
@@ -18,4 +19,5 @@ export const routes: Routes = [
   { path: 'admin/generar-qr', component: QrGenerator },
   { path: 'menu/:id', component: MenuPage },
   { path: 'cuenta/:id', component: BillPage },
+  { path: 'cocina', component: TableroPedidos }
 ];
