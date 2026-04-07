@@ -8,6 +8,7 @@ import model.PedidoEstado;
 import repository.interfaces.CuentaRepository;
 import repository.interfaces.OrdenRepository;
 import repository.interfaces.PedidoRepository;
+import service.MesaApplicationService;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,7 +18,7 @@ public class PedidoApplicationService {
     private final PedidoRepository pedidoRepository;
     private final CuentaRepository cuentaRepository;
     private final OrdenRepository ordenRepository;
-    private final service.application.MesaApplicationService mesaApplicationService;
+    private final service.MesaApplicationService mesaApplicationService;
 
     public PedidoApplicationService(
             PedidoRepository pedidoRepository,

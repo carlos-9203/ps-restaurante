@@ -22,7 +22,7 @@ import repository.firestore.FirestorePedidoRepository;
 import repository.firestore.FirestorePlatoRepository;
 import repository.firestore.FirestoreReservaRepository;
 import service.CuentaService;
-import service.application.MesaApplicationService;
+import service.MesaApplicationService;
 import service.MesaService;
 import service.NotificacionService;
 import service.OrdenApplicationService;
