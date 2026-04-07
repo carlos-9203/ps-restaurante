@@ -1,18 +1,34 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Mesa } from '../../models/mesa.model';
 
 @Component({
   selector: 'app-mesa-detalle',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DatePipe],
   templateUrl: './mesa-detalle.html',
   styleUrl: './mesa-detalle.css',
 })
-export class MesaDetalleComponent {
+export class MesaDetalleComponent implements OnChanges {
   @Input({ required: true }) mesa!: Mesa;
   @Input() accionEnCurso = false;
 
   @Output() ocupar = new EventEmitter<string>();
   @Output() liberar = new EventEmitter<string>();
+
+  mostrarCuenta = false;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['mesa']) {
+      this.mostrarCuenta = false;
+    }
+  }
+
+  toggleCuenta(): void {
+    if (this.mesa.estado !== 'ocupada' || !this.mesa.cuentaActiva) {
+      return;
+    }
+
+    this.mostrarCuenta = !this.mostrarCuenta;
+  }
 }

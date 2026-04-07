@@ -1,41 +1,54 @@
 .mesa-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 120px;
-  padding: 18px;
-  border-radius: 16px;
+  min-height: 136px;
+  border-radius: 14px;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mesa-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .mesa-card.libre {
-  background: #22c55e;
-  color: #0f172a;
+  background: #1ed61a;
 }
 
 .mesa-card.ocupada {
-  background: #ef4444;
-  color: white;
+  background: #c61b1b;
 }
 
 .mesa-card.seleccionada {
-  border-color: #374151;
-  box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.15);
+  border-color: #39424e;
+  box-shadow: 0 0 0 3px rgba(57, 66, 78, 0.18);
+}
+
+.mesa-card__content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  padding: 16px 20px;
+  box-sizing: border-box;
 }
 
 .mesa-card__title {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 3rem;
+  font-weight: 500;
+  line-height: 1;
+  color: #111111;
 }
 
-.mesa-card__meta,
-.mesa-card__estado {
-  font-size: 0.95rem;
+.mesa-card__pill {
+  background: rgba(255, 255, 255, 0.4);
+  color: #333333;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 1rem;
+  font-weight: 600;
 }

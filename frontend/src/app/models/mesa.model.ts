@@ -6,18 +6,13 @@ export interface MesaApi {
   capacidad: number;
 }
 
-export interface EstadoMesaApi {
-  mesaId: string;
-  ocupada: boolean;
-}
-
 export interface CuentaApi {
   id: string;
   mesas: Array<{
     id: string;
     capacidad: number;
   }>;
-  estaPagada: boolean;
+  payed: boolean;
   fechaCreacion: string;
   fechaPago?: string | null;
 }
@@ -28,4 +23,5 @@ export interface Mesa {
   zona: ZonaMesa;
   estado: EstadoMesa;
   cuentaActivaId: string | null;
+  cuentaActiva: CuentaApi | null;
 }

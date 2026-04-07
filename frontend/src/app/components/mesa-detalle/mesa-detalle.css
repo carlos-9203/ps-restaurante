@@ -1,50 +1,135 @@
 .sidebar-detalle {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  background: #f5f5f5;
+  border-radius: 18px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .detalle-header {
-  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 18px;
+  text-align: center;
 }
 
 .detalle-label {
-  margin: 0 0 6px 0;
-  font-size: 0.85rem;
-  color: #6b7280;
+  margin: 0 0 10px 0;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  color: #8a8f98;
+  letter-spacing: 0.03em;
 }
 
 .detalle-header h2 {
   margin: 0;
+  font-size: 2.2rem;
+  color: #1d1d1d;
+  font-weight: 700;
 }
 
-.detalle-info {
+.detalle-pill {
+  margin-top: 10px;
+  background: #e3e3e3;
+  color: #666666;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.acciones-superiores {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-top: 8px;
 }
 
-.detalle-info p {
-  margin: 0;
-}
-
-.detalle-acciones button {
+.accion-secundaria {
   width: 100%;
-  padding: 12px 16px;
-  border: none;
+  min-height: 40px;
   border-radius: 10px;
-  background: #111827;
-  color: white;
+  border: 1px solid #dfdfdf;
+  background: #f8f8f8;
+  color: #4e4e4e;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
 }
 
-.detalle-acciones button:disabled {
-  opacity: 0.6;
+.accion-secundaria:disabled {
   cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cuenta-dropdown {
+  margin-top: 14px;
+  margin-bottom: 18px;
+  border: 1px solid #e2e2e2;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cuenta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cuenta-key {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #8a8f98;
+  letter-spacing: 0.03em;
+}
+
+.cuenta-value {
+  font-size: 0.95rem;
+  color: #222222;
+  word-break: break-word;
+}
+
+.detalle-info-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.detalle-info-simple p {
+  margin: 0;
+  color: #2e2e2e;
+}
+
+.accion-principal {
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+.accion-principal:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.accion-principal--green {
+  background: #1ed61a;
+}
+
+.accion-principal--dark {
+  background: #08142d;
 }

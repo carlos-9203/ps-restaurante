@@ -1,17 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, map, Observable } from 'rxjs';
-import { Mesa, MesaApi } from '../models/mesa.model';
+import { CuentaApi, Mesa, MesaApi } from '../models/mesa.model';
 import { MESAS_LAYOUT } from '../data/mesas-layout';
-
-interface CuentaApi {
-  id: string;
-  mesas: Array<{
-    id: string;
-    capacidad: number;
-  }>;
-  payed: boolean;
-}
 
 @Injectable({
   providedIn: 'root',
@@ -48,11 +39,12 @@ export class MesasApiService {
           .map((mesaDb) => {
             const layout = layoutMap.get(mesaDb.id);
 
-            const cuentaActiva = cuentas.find(
-              (cuenta) =>
-                !cuenta.payed &&
-                cuenta.mesas?.some((mesa) => mesa.id === mesaDb.id)
-            );
+            const cuentaActiva =
+              cuentas.find(
+                (cuenta) =>
+                  !cuenta.payed &&
+                  cuenta.mesas?.some((mesa) => mesa.id === mesaDb.id)
+              ) ?? null;
 
             return {
               id: mesaDb.id,
@@ -60,6 +52,7 @@ export class MesasApiService {
               zona: layout?.zona ?? 'interior',
               estado: cuentaActiva ? 'ocupada' : 'libre',
               cuentaActivaId: cuentaActiva?.id ?? null,
+              cuentaActiva,
             } as Mesa;
           })
           .sort((a, b) => Number(a.id) - Number(b.id));

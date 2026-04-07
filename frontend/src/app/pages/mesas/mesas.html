@@ -1,19 +1,46 @@
 <div class="mesas-page">
-  <div class="mesas-toolbar">
+  <div class="mesas-topbar">
     <div class="tabs-zona">
-      <button type="button" [class.active]="zona() === 'interior'" (click)="cambiarZona('interior')">
+      <button
+        type="button"
+        [class.active]="zona() === 'interior'"
+        (click)="cambiarZona('interior')">
         Interior
       </button>
 
-      <button type="button" [class.active]="zona() === 'terraza'" (click)="cambiarZona('terraza')">
+      <button
+        type="button"
+        [class.active]="zona() === 'terraza'"
+        (click)="cambiarZona('terraza')">
         Terraza
       </button>
     </div>
 
-    @if (error()) {
-      <p class="error">{{ error() }}</p>
-    }
+    <div class="mesas-topbar-right">
+      <button type="button" class="edit-btn" disabled>Editar</button>
+
+      <div class="estado-legend">
+        <span class="legend-item">
+          <span class="legend-dot legend-dot--ocupada"></span>
+          Ocupado
+        </span>
+
+        <span class="legend-item">
+          <span class="legend-dot legend-dot--reservada"></span>
+          Reservado
+        </span>
+
+        <span class="legend-item">
+          <span class="legend-dot legend-dot--libre"></span>
+          Libre
+        </span>
+      </div>
+    </div>
   </div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
 
   @if (cargando()) {
     <p>Cargando mesas...</p>
