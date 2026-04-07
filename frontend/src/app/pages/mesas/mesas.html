@@ -1,5 +1,5 @@
 <div class="mesas-page">
-  <div class="mesas-topbar">
+  <div class="mesas-topbar" [class.panel-abierto]="!!mesaSeleccionada()">
     <div class="tabs-zona">
       <button
         type="button"
@@ -15,6 +15,8 @@
         Terraza
       </button>
     </div>
+
+    <div></div>
 
     <div class="mesas-topbar-right">
       <button type="button" class="edit-btn" disabled>Editar</button>
@@ -45,7 +47,7 @@
   @if (cargando()) {
     <p>Cargando mesas...</p>
   } @else {
-    <div class="mesas-layout">
+    <div class="mesas-layout" [class.panel-abierto]="!!mesaSeleccionada()">
       <section class="grid-mesas">
         @for (mesa of mesasActuales(); track mesa.id) {
           <div (click)="seleccionar(mesa)">

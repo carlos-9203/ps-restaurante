@@ -1,79 +1,78 @@
 <div class="sidebar-detalle">
   <div class="detalle-header">
     <p class="detalle-label">Mesa seleccionada</p>
-    <h2>Mesa {{ mesa.id }}</h2>
+    <h2>MESA{{ mesa.id }}</h2>
     <div class="detalle-pill">{{ mesa.capacidad }} Pax</div>
   </div>
 
-  @if (mesa.estado === 'ocupada') {
-    <div class="acciones-superiores">
-      <button type="button" class="accion-secundaria" disabled>
-        Reservar mesa
-      </button>
+  <div class="acciones-superiores">
+    <button type="button" class="accion-secundaria" disabled>
+      Reservar mesa
+    </button>
 
-      <button type="button" class="accion-secundaria" disabled>
-        Cobrar
-      </button>
+    <button type="button" class="accion-secundaria" disabled>
+      Cobrar
+    </button>
 
-      <button type="button" class="accion-secundaria" (click)="toggleCuenta()">
-        Ver cuenta
-      </button>
+    <button
+      type="button"
+      class="accion-secundaria"
+      [disabled]="mesa.estado !== 'ocupada' || !mesa.cuentaActiva"
+      (click)="toggleCuenta()">
+      Ver cuenta
+    </button>
 
-      <button type="button" class="accion-secundaria" disabled>
-        Hacer pedido
-      </button>
-
-      <button type="button" class="accion-secundaria" disabled>
-        Contraseña
-      </button>
-    </div>
-
-    @if (mostrarCuenta) {
+    @if (mostrarCuenta && mesa.estado === 'ocupada' && mesa.cuentaActiva) {
       <div class="cuenta-dropdown">
         <div class="cuenta-row">
           <span class="cuenta-key">ID</span>
-          <span class="cuenta-value">{{ mesa.cuentaActiva?.id }}</span>
+          <span class="cuenta-value">{{ mesa.cuentaActiva.id }}</span>
         </div>
 
         <div class="cuenta-row">
           <span class="cuenta-key">Estado</span>
           <span class="cuenta-value">
-            {{ mesa.cuentaActiva?.payed ? 'Pagada' : 'Activa' }}
+            {{ mesa.cuentaActiva.payed ? 'Pagada' : 'Activa' }}
           </span>
         </div>
 
         <div class="cuenta-row">
           <span class="cuenta-key">Creación</span>
           <span class="cuenta-value">
-            {{ mesa.cuentaActiva?.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+            {{ mesa.cuentaActiva.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
           </span>
         </div>
 
-        @if (mesa.cuentaActiva?.fechaPago) {
+        @if (mesa.cuentaActiva.fechaPago) {
           <div class="cuenta-row">
             <span class="cuenta-key">Pago</span>
             <span class="cuenta-value">
-              {{ mesa.cuentaActiva?.fechaPago | date:'dd/MM/yyyy HH:mm' }}
+              {{ mesa.cuentaActiva.fechaPago | date:'dd/MM/yyyy HH:mm' }}
             </span>
           </div>
         }
       </div>
     }
 
-    <button
-      type="button"
-      class="accion-principal accion-principal--dark"
-      (click)="liberar.emit(mesa.id)"
-      [disabled]="accionEnCurso">
-      Liberar mesa
+    <button type="button" class="accion-secundaria" disabled>
+      Hacer pedido
     </button>
-  } @else {
-    <div class="detalle-info-simple">
-      <p><strong>Capacidad:</strong> {{ mesa.capacidad }} pax</p>
-      <p><strong>Estado:</strong> Libre</p>
-      <p><strong>Cuenta activa:</strong> ninguna</p>
-    </div>
 
+    <button type="button" class="accion-secundaria" disabled>
+      Contraseña
+    </button>
+  </div>
+
+  <button
+    *ngIf="mesa.estado === 'ocupada'; else ocuparBtn"
+    type="button"
+    class="accion-principal accion-principal--red"
+    (click)="liberar.emit(mesa.id)"
+    [disabled]="accionEnCurso">
+    Liberar mesa
+  </button>
+
+  <ng-template #ocuparBtn>
     <button
       type="button"
       class="accion-principal accion-principal--green"
@@ -81,5 +80,5 @@
       [disabled]="accionEnCurso">
       Ocupar mesa
     </button>
-  }
+  </ng-template>
 </div>
