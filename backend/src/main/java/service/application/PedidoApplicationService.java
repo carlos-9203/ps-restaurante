@@ -17,13 +17,13 @@ public class PedidoApplicationService {
     private final PedidoRepository pedidoRepository;
     private final CuentaRepository cuentaRepository;
     private final OrdenRepository ordenRepository;
-    private final service.MesaApplicationService mesaApplicationService;
+    private final service.application.MesaApplicationService mesaApplicationService;
 
     public PedidoApplicationService(
             PedidoRepository pedidoRepository,
             CuentaRepository cuentaRepository,
             OrdenRepository ordenRepository,
-            service.MesaApplicationService mesaApplicationService
+            MesaApplicationService mesaApplicationService
     ) {
         this.pedidoRepository = pedidoRepository;
         this.cuentaRepository = cuentaRepository;

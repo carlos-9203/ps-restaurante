@@ -6,7 +6,7 @@ import model.Cuenta;
 import model.Mesa;
 import model.Orden;
 import model.Pedido;
-import service.MesaApplicationService;
+import service.application.MesaApplicationService;
 import service.MesaService;
 import util.ApiError;
 

@@ -15,7 +15,7 @@ import java.util.Optional;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
-public class CuentaController {
+public class    CuentaController {
 
     private final CuentaService service;
     private final PagoApplicationService pagoApplicationService;
