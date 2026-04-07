@@ -1,9 +1,37 @@
-import { Component } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-header',
-  imports: [],
+  standalone: true,
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './header.html',
-  styleUrl: './header.css',
+  styleUrls: ['./header.css'],
 })
-export class Header {}
+export class Header {
+  private route = inject(ActivatedRoute);
+
+  // Capturamos el id de la mesa desde la URL
+  tableId = signal <string> (this.route.snapshot.params['id'] || '1');
+
+  // Controla el estado del PopUp del camarero
+  estadoLlamada = signal<'oculto' | 'confirmacion' | 'en-camino'>('oculto');
+
+  abrirConfirmacion(event: Event) {
+    event.preventDefault();
+    this.estadoLlamada.set('confirmacion');
+  }
+
+  cancelarLlamada() {
+    this.estadoLlamada.set('oculto');
+  }
+
+  confirmarLlamada() {
+    this.estadoLlamada.set('en-camino');
+
+    //Ocultamos el mensaje automáticamente después de 3 segundos
+    setTimeout(() => {
+      this.estadoLlamada.set('oculto');
+    }, 3000);
+  }
+}
