@@ -47,7 +47,7 @@ public class FirestorePedidoRepository extends AbstractFirestoreRepository<Pedid
         if (pedido.cuenta() != null) {
             Map<String, Object> cMap = new HashMap<>();
             cMap.put("id", pedido.cuenta().id());
-            cMap.put("estaPagada", pedido.cuenta().estaPagada());
+            cMap.put("estaPagada", pedido.cuenta().payed());
             cMap.put("fechaCreacion", toTimestamp(pedido.cuenta().fechaCreacion()));
             map.put("cuenta", cMap);
         }

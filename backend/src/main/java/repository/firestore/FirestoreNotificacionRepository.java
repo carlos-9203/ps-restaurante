@@ -41,7 +41,7 @@ public class FirestoreNotificacionRepository extends AbstractFirestoreRepository
         if (notificacion.cuenta() != null) {
             Map<String, Object> cMap = new HashMap<>();
             cMap.put("id", notificacion.cuenta().id());
-            cMap.put("estaPagada", notificacion.cuenta().estaPagada());
+            cMap.put("estaPagada", notificacion.cuenta().payed());
             cMap.put("fechaCreacion", toTimestamp(notificacion.cuenta().fechaCreacion()));
             map.put("cuenta", cMap);
         }

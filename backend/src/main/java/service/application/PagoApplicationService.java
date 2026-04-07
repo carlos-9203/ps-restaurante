@@ -62,7 +62,7 @@ public class PagoApplicationService {
     public BigDecimal calcularPendienteCuenta(String cuentaId) {
         Cuenta cuenta = obtenerCuentaPorId(cuentaId);
 
-        if (cuenta.estaPagada()) {
+        if (cuenta.payed()) {
             return BigDecimal.ZERO;
         }
 
@@ -76,7 +76,7 @@ public class PagoApplicationService {
     public Cuenta pagarCuentaCompleta(String cuentaId) {
         Cuenta cuenta = obtenerCuentaPorId(cuentaId);
 
-        if (cuenta.estaPagada()) {
+        if (cuenta.payed()) {
             throw new IllegalArgumentException("La cuenta ya está pagada");
         }
 
@@ -104,7 +104,7 @@ public class PagoApplicationService {
             throw new IllegalArgumentException("La cuenta todavía tiene saldo pendiente");
         }
 
-        if (cuenta.estaPagada()) {
+        if (cuenta.payed()) {
             return cuenta;
         }
 

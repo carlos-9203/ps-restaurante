@@ -1,4 +1,5 @@
-<div class="mesa-card" [class]="estado" [class.seleccionada]="seleccionada">
-  <span class="mesa-numero">M{{ numero }}</span>
-  <span class="mesa-capacidad">{{ capacidad }} Pax</span>
+<div class="mesa-card" [class.seleccionada]="seleccionada" [class.ocupada]="estado === 'ocupada'" [class.libre]="estado === 'libre'">
+  <div class="mesa-card__title">M{{ numero }}</div>
+  <div class="mesa-card__meta">{{ capacidad }} Pax</div>
+  <div class="mesa-card__estado">{{ estado === 'ocupada' ? 'Ocupada' : 'Libre' }}</div>
 </div>

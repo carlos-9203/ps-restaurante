@@ -1,6 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Mesa } from '../../models/mesa.model'; // Importado
+import { Mesa } from '../../models/mesa.model';
 
 @Component({
   selector: 'app-mesa-detalle',
@@ -10,6 +10,9 @@ import { Mesa } from '../../models/mesa.model'; // Importado
   styleUrl: './mesa-detalle.css',
 })
 export class MesaDetalleComponent {
-  // Ahora Angular sabe exactamente qué es esto
   @Input({ required: true }) mesa!: Mesa;
+  @Input() accionEnCurso = false;
+
+  @Output() ocupar = new EventEmitter<string>();
+  @Output() liberar = new EventEmitter<string>();
 }

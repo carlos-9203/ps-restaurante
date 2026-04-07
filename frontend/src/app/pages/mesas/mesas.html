@@ -1,40 +1,47 @@
-<div class="mesas-page"
-     (click)="cerrarSeleccion($event)"
-     [class.panel-abierto]="mesaSeleccionada()">
+<div class="mesas-page">
+  <div class="mesas-toolbar">
+    <div class="tabs-zona">
+      <button type="button" [class.active]="zona() === 'interior'" (click)="cambiarZona('interior')">
+        Interior
+      </button>
 
-  <div class="controles" [class.seleccion-activa]="mesaSeleccionada()">
-    <div class="zonas">
-      <button [class.activo]="zona() === 'interior'" (click)="cambiarZona('interior')">INTERIOR</button>
-      <button [class.activo]="zona() === 'terraza'" (click)="cambiarZona('terraza')">TERRAZA</button>
+      <button type="button" [class.active]="zona() === 'terraza'" (click)="cambiarZona('terraza')">
+        Terraza
+      </button>
     </div>
 
-    <div class="acciones-derecha">
-      <button class="btn-editar">EDITAR</button>
-      <div class="leyenda">
-        <div class="pill"><span class="dot ocupada"></span> Ocupado</div>
-        <div class="pill"><span class="dot reservada"></span> Reservado</div>
-        <div class="pill"><span class="dot libre"></span> Libre</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="contenido">
-    <div class="grid-mesas" [class.layout-terraza]="zona() === 'terraza'">
-      @for (mesa of mesasActuales(); track mesa.id) {
-        <app-mesa-card
-          [numero]="mesa.id"
-          [capacidad]="mesa.capacidad"
-          [estado]="mesa.estado"
-          [seleccionada]="mesaSeleccionada()?.id === mesa.id"
-          (click)="seleccionar(mesa); $event.stopPropagation()">
-        </app-mesa-card>
-      }
-    </div>
-
-    @if (mesaSeleccionada(); as mesaSel) {
-      <div class="sidebar-detalle">
-        <app-mesa-detalle [mesa]="mesaSel"></app-mesa-detalle>
-      </div>
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
     }
   </div>
+
+  @if (cargando()) {
+    <p>Cargando mesas...</p>
+  } @else {
+    <div class="mesas-layout">
+      <section class="grid-mesas">
+        @for (mesa of mesasActuales(); track mesa.id) {
+          <div (click)="seleccionar(mesa)">
+            <app-mesa-card
+              [numero]="mesa.id"
+              [capacidad]="mesa.capacidad"
+              [estado]="mesa.estado"
+              [seleccionada]="mesaSeleccionada()?.id === mesa.id">
+            </app-mesa-card>
+          </div>
+        }
+      </section>
+
+      @if (mesaSeleccionada(); as mesaSel) {
+        <aside class="detalle-columna">
+          <app-mesa-detalle
+            [mesa]="mesaSel"
+            [accionEnCurso]="accionMesaId() === mesaSel.id"
+            (ocupar)="ocuparMesa($event)"
+            (liberar)="liberarMesa($event)">
+          </app-mesa-detalle>
+        </aside>
+      }
+    </div>
+  }
 </div>

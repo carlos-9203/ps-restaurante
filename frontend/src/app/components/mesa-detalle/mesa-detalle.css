@@ -1,82 +1,50 @@
-.detalle-panel {
+.sidebar-detalle {
   background: white;
-  border-radius: 12px;
-  padding: 2rem 1.5rem;
-  width: 280px;
-  min-height: 75vh;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.detalle-header {
+  margin-bottom: 16px;
+}
+
+.detalle-label {
+  margin: 0 0 6px 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detalle-header h2 {
+  margin: 0;
+}
+
+.detalle-info {
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  box-sizing: border-box;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-/* Cabecera del panel */
-.header-detalle {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
+.detalle-info p {
+  margin: 0;
 }
 
-.detalle-label { font-size: 0.75rem; color: #888; margin: 0 0 0.5rem 0; font-weight: 600; letter-spacing: 0.5px; }
-.header-detalle h2 { margin: 0 0 0.5rem 0; font-size: 2.5rem; color: #1a1a1a; }
-.detalle-cap {
-  font-size: 0.85rem; color: #555; margin: 0;
-  background: #f0f4f8; display: inline-block;
-  padding: 4px 12px; border-radius: 20px; font-weight: 600;
-}
-
-/* Lista de Botones */
-.acciones { display: flex; flex-direction: column; gap: 0.8rem; flex: 1; }
-
-.accion {
-  background: transparent;
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
-  padding: 12px 16px;
-  text-align: left;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #444;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.2s ease;
-}
-
-.accion .iconify {
-  font-size: 1.3rem;
-  color: #c5b6a7;
-  transition: color 0.2s ease;
-}
-
-/* Efecto Hover en los botones */
-.accion:hover {
-  background: #faf8f5;
-  border-color: #c5b6a7;
-  transform: translateY(-1px);
-}
-.accion:hover .iconify { color: #a89483; }
-
-/* Botón final (Ocupar/Liberar) */
-.estado-accion { margin-top: 1.5rem; }
-
-.btn-principal {
+.detalle-acciones button {
   width: 100%;
-  padding: 14px;
+  padding: 12px 16px;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  background: #111827;
   color: white;
-  transition: background 0.2s;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-/* Usamos los mismos colores exactos que en las tarjetas */
-.btn-principal.ocupar { background: #15cc15; }
-.btn-principal.ocupar:hover { background: #12b312; }
-
-.btn-principal.liberar { background: #b31c1c; }
-.btn-principal.liberar:hover { background: #9a1818; }
+.detalle-acciones button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -46,14 +46,11 @@ public class MesaApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException("La mesa no existe"));
     }
 
+
+
     public Optional<Cuenta> obtenerCuentaActivaDeMesa(String mesaId) {
         Mesa mesa = obtenerMesa(mesaId);
-
-        return cuentaRepository.findAll().stream()
-                .filter(cuenta -> cuenta.mesas() != null)
-                .filter(cuenta -> cuenta.mesas().stream().anyMatch(m -> m.id().equals(mesa.id())))
-                .filter(cuenta -> !cuenta.estaPagada())
-                .findFirst();
+        return cuentaRepository.findByMesa(mesa);
     }
 
     public Cuenta ocuparMesa(String mesaId) {
@@ -75,14 +72,20 @@ public class MesaApplicationService {
         return cuentaRepository.save(nuevaCuenta);
     }
 
-    public void liberarMesa(String mesaId) {
-        Optional<Cuenta> cuentaActiva = obtenerCuentaActivaDeMesa(mesaId);
+    public Cuenta liberarMesa(String mesaId) {
+        Cuenta cuentaActiva = obtenerCuentaActivaDeMesa(mesaId)
+                .orElseThrow(() -> new IllegalArgumentException("La mesa ya está libre"));
 
-        if (cuentaActiva.isEmpty()) {
-            return;
-        }
+        Cuenta cuentaLiberada = new Cuenta(
+                cuentaActiva.id(),
+                cuentaActiva.mesas(),
+                true,
+                cuentaActiva.reserva(),
+                cuentaActiva.fechaCreacion(),
+                Optional.of(Instant.now())
+        );
 
-        throw new IllegalArgumentException("No se puede liberar la mesa porque su cuenta sigue activa");
+        return cuentaRepository.update(cuentaActiva.id(), cuentaLiberada);
     }
 
     public List<Pedido> obtenerPedidosActivosDeMesa(String mesaId) {

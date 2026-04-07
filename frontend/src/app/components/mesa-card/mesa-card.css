@@ -1,35 +1,41 @@
 .mesa-card {
-  width: 100%; /* Se adaptará al grid */
-  height: 120px;
-  border-radius: 12px;
   display: flex;
-  flex-direction: row; /* Horizontal */
-  align-items: center;
-  justify-content: center; /* M1 a la izq, Pax a la der */
-  gap: 4rem;
-  padding: 0 1.5rem;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 120px;
+  padding: 18px;
+  border-radius: 16px;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra suave de Figma */
+  border: 2px solid transparent;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
 }
 
-.mesa-numero {
-  font-size: 2.5rem;
-  font-weight: 500;
-  color: #1a1a1a;
+.mesa-card:hover {
+  transform: translateY(-2px);
 }
 
-.mesa-capacidad {
-  font-size: 1rem;
-  background: rgba(255,255,255,0.4);
-  padding: 4px 12px;
-  border-radius: 20px;
-  color: #1a1a1a;
-  font-weight: 600;
+.mesa-card.libre {
+  background: #22c55e;
+  color: #0f172a;
 }
 
-/* Colores vibrantes del diseño */
-.libre     { background-color: #15cc15; }
-.ocupada   { background-color: #b31c1c; }
-.reservada { background-color: #9b59b6; }
-.seleccionada { outline: 3px solid #333; outline-offset: 2px; }
+.mesa-card.ocupada {
+  background: #ef4444;
+  color: white;
+}
+
+.mesa-card.seleccionada {
+  border-color: #374151;
+  box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.15);
+}
+
+.mesa-card__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.mesa-card__meta,
+.mesa-card__estado {
+  font-size: 0.95rem;
+}

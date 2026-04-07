@@ -1,33 +1,29 @@
-<div class="detalle-panel">
-  <div class="header-detalle">
-    <p class="detalle-label">MESA SELECCIONADA</p>
-    <h2>MESA{{ mesa.id }}</h2>
-    <p class="detalle-cap">{{ mesa.capacidad }} Pax</p>
+<div class="sidebar-detalle">
+  <div class="detalle-header">
+    <p class="detalle-label">Mesa seleccionada</p>
+    <h2>Mesa {{ mesa.id }}</h2>
   </div>
 
-  <div class="acciones">
-    <button class="accion">
-      <span class="iconify" data-icon="solar:calendar-bold-duotone"></span> Reservar Mesa
-    </button>
-    <button class="accion">
-      <span class="iconify" data-icon="solar:wallet-bold-duotone"></span> Cobrar
-    </button>
-    <button class="accion">
-      <span class="iconify" data-icon="solar:bill-list-bold-duotone"></span> Ver Cuenta
-    </button>
-    <button class="accion">
-      <span class="iconify" data-icon="solar:cart-large-bold-duotone"></span> Hacer Pedido
-    </button>
-    <button class="accion">
-      <span class="iconify" data-icon="solar:key-minimalistic-bold-duotone"></span> Contraseña
-    </button>
-  </div>
+  <div class="detalle-info">
+    <p><strong>Capacidad:</strong> {{ mesa.capacidad }} pax</p>
+    <p><strong>Estado:</strong> {{ mesa.estado === 'ocupada' ? 'Ocupada' : 'Libre' }}</p>
 
-  <div class="estado-accion">
-    @if (mesa.estado === 'libre') {
-      <button class="btn-principal ocupar">OCUPAR MESA</button>
+    @if (mesa.cuentaActivaId) {
+      <p><strong>Cuenta activa:</strong> {{ mesa.cuentaActivaId }}</p>
     } @else {
-      <button class="btn-principal liberar">LIBERAR MESA</button>
+      <p><strong>Cuenta activa:</strong> ninguna</p>
+    }
+  </div>
+
+  <div class="detalle-acciones">
+    @if (mesa.estado === 'libre') {
+      <button type="button" (click)="ocupar.emit(mesa.id)" [disabled]="accionEnCurso">
+        Ocupar mesa
+      </button>
+    } @else {
+      <button type="button" (click)="liberar.emit(mesa.id)" [disabled]="accionEnCurso">
+        Liberar mesa
+      </button>
     }
   </div>
 </div>
