@@ -1,20 +1,12 @@
 <header class="app-header">
   <div class="logo-container">
-    <img src="logo.png" alt="Logo Restaurante" class="logo" [routerLink]="['/menu', tableId()]">
+    <img src="logo.png" alt="Logo Restaurante" class="logo" />
   </div>
 
   <nav class="nav-links">
-    <a [routerLink]="['/menu', tableId()]" routerLinkActive="active">
-      MENÚ
-    </a>
-
-    <a href="#" (click)="abrirConfirmacion($event)" [class.active]="estadoLlamada() !== 'oculto'">
-      SOLICITAR<br>ATENCIÓN
-    </a>
-
-    <a [routerLink]="['/cuenta', tableId()]" routerLinkActive="active">
-      CUENTA
-    </a>
+    <a [routerLink]="['/menu', tableId()]" routerLinkActive="active">MENÚ</a>
+    <a href="#" (click)="abrirConfirmacion($event)">SOLICITAR ATENCIÓN</a>
+    <a [routerLink]="['/cuenta', tableId()]" routerLinkActive="active">CUENTA</a>
   </nav>
 </header>
 
@@ -27,8 +19,7 @@
           <button class="btn-opcion" (click)="confirmarLlamada()">SI</button>
           <button class="btn-opcion" (click)="cancelarLlamada()">NO</button>
         </div>
-      }
-      @else if (estadoLlamada() === 'en-camino') {
+      } @else if (estadoLlamada() === 'en-camino') {
         <p class="popup-mensaje exito">UN CAMARERO ESTÁ EN CAMINO</p>
       }
     </div>

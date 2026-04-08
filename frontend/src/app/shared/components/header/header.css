@@ -1,60 +1,84 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .app-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background-color: #D4B596; /* Color marrón claro del diseño */
-  padding: 10px 20px;
-  height: 80px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  justify-content: center;
+  position: relative;
+  min-height: 120px;
+  background-color: var(--bg-header, #d4b596);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 0 1rem;
+  z-index: 100;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .logo-container {
-  flex: 1;
+  position: absolute;
+  left: 2rem;
+  display: flex;
+  align-items: center;
 }
 
 .logo {
-  height: 60px;
-  /* Si no tienes logo aún, puedes simularlo con un div gris */
-  background-color: #555;
-  width: 60px;
+  height: 110px;
+  width: 110px;
   border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.03);
 }
 
 .nav-links {
-  cursor: pointer;
-  text-decoration: none;
   display: flex;
-  gap: 20px;
   align-items: center;
+  justify-content: center;
+  gap: 4rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .nav-links a {
   text-decoration: none;
-  color: #333;
-  font-family: sans-serif;
-  font-size: 0.9rem;
-  text-align: center;
+  color: var(--text-dark, #3a2a1a);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  padding-bottom: 6px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .nav-links a.active {
-  font-weight: bold;
-  color: #000;
+  border-bottom: 2px solid var(--text-dark, #3a2a1a);
 }
 
-/* --- POPUP DEL CAMARERO --- */
+.nav-links a:hover:not(.active) {
+  opacity: 0.7;
+}
+
 .overlay-camarero {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 9999;
-
-  /* Desenfocamos el fondo el fondo */
   background-color: rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(4px);
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,7 +92,7 @@
   padding: 40px 20px;
   width: 100%;
   max-width: 320px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
   text-align: center;
   animation: popIn 0.2s ease-out;
 }
@@ -82,7 +106,6 @@
   text-transform: uppercase;
 }
 
-/* Espacio extra para que el mensaje de éxito quede bien centrado sin los botones */
 .popup-mensaje.exito {
   margin-bottom: 0;
   padding: 20px 0;
@@ -104,13 +127,83 @@
   padding: 10px 20px;
 }
 
-/* Efecto para que el botón reaccione al tocarlo */
 .btn-opcion:active {
   transform: scale(0.9);
   font-weight: bold;
 }
 
+@media (max-width: 900px) {
+  .app-header {
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .logo-container {
+    position: static;
+    justify-content: center;
+  }
+
+  .logo {
+    height: 84px;
+    width: 84px;
+  }
+
+  .nav-links {
+    width: 100%;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .nav-links a {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    padding: 14px 12px;
+  }
+
+  .logo-container {
+    position: static;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .nav-links {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    justify-items: center;
+  }
+
+  .nav-links a {
+    width: 100%;
+    max-width: 320px;
+    padding: 12px 10px;
+    border-bottom: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.24);
+  }
+
+  .nav-links a.active {
+    border-bottom: none;
+    background: rgba(255, 255, 255, 0.55);
+  }
+}
+
 @keyframes popIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
