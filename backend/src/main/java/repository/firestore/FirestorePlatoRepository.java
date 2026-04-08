@@ -18,12 +18,13 @@ public class FirestorePlatoRepository extends AbstractFirestoreRepository<Plato>
     @Override
     protected Plato mapToEntity(String id, Map<String, Object> data) {
         return new Plato(
-            id,
-            get(data, "nombre", ""),
-            toEnum(Categoria.class, data.get("categoria"), Categoria.Principal),
-            get(data, "descripcion", ""),
-            toBigDecimal(data.get("precio")),
-            get(data, "estaActivo", true)
+                id,
+                get(data, "nombre", ""),
+                toEnum(Categoria.class, data.get("categoria"), Categoria.Principal),
+                get(data, "descripcion", ""),
+                toBigDecimal(data.get("precio")),
+                get(data, "estaActivo", true),
+                get(data, "imagen", "")
         );
     }
 
@@ -35,6 +36,7 @@ public class FirestorePlatoRepository extends AbstractFirestoreRepository<Plato>
         map.put("descripcion", plato.descripcion());
         map.put("precio", toCents(plato.precio()));
         map.put("estaActivo", plato.estaActivo());
+        map.put("imagen", plato.imagen());
         return map;
     }
 
@@ -45,7 +47,15 @@ public class FirestorePlatoRepository extends AbstractFirestoreRepository<Plato>
 
     @Override
     protected Plato createWithId(Plato plato, String id) {
-        return new Plato(id, plato.nombre(), plato.categoria(), plato.descripcion(), plato.precio(), plato.estaActivo());
+        return new Plato(
+                id,
+                plato.nombre(),
+                plato.categoria(),
+                plato.descripcion(),
+                plato.precio(),
+                plato.estaActivo(),
+                plato.imagen()
+        );
     }
 
     @Override

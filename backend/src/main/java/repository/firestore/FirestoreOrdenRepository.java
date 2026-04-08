@@ -1,13 +1,17 @@
 package repository.firestore;
 
 import com.google.cloud.firestore.Firestore;
-import model.*;
+import model.Categoria;
+import model.Orden;
+import model.OrdenEstado;
+import model.Pedido;
+import model.PedidoEstado;
+import model.Plato;
 import repository.interfaces.OrdenRepository;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class FirestoreOrdenRepository extends AbstractFirestoreRepository<Orden> implements OrdenRepository {
 
@@ -20,23 +24,36 @@ public class FirestoreOrdenRepository extends AbstractFirestoreRepository<Orden>
         Map<String, Object> pData = (Map<String, Object>) data.get("pedido");
         Pedido pedido = null;
         if (pData != null) {
-            pedido = new Pedido((String) pData.get("id"), null, toEnum(PedidoEstado.class, pData.get("pedidoEstado"), PedidoEstado.Pendiente), toInstant(pData.get("fechaPedido")));
+            pedido = new Pedido(
+                    (String) pData.get("id"),
+                    null,
+                    toEnum(PedidoEstado.class, pData.get("pedidoEstado"), PedidoEstado.Pendiente),
+                    toInstant(pData.get("fechaPedido"))
+            );
         }
 
         Map<String, Object> plData = (Map<String, Object>) data.get("plato");
         Plato plato = null;
         if (plData != null) {
-            plato = new Plato((String) plData.get("id"), (String) plData.get("nombre"), toEnum(Categoria.class, plData.get("categoria"), Categoria.Principal), "", toBigDecimal(0L), true);
+            plato = new Plato(
+                    (String) plData.get("id"),
+                    (String) plData.get("nombre"),
+                    toEnum(Categoria.class, plData.get("categoria"), Categoria.Principal),
+                    "",
+                    toBigDecimal(0L),
+                    true,
+                    get(plData, "imagen", "")
+            );
         }
 
         return new Orden(
-            id,
-            pedido,
-            plato,
-            toBigDecimal(data.get("precio")),
-            toEnum(OrdenEstado.class, data.get("ordenEstado"), OrdenEstado.Pendiente),
-            toInstant(data.get("fecha")),
-            get(data, "detalles", "")
+                id,
+                pedido,
+                plato,
+                toBigDecimal(data.get("precio")),
+                toEnum(OrdenEstado.class, data.get("ordenEstado"), OrdenEstado.Pendiente),
+                toInstant(data.get("fecha")),
+                get(data, "detalles", "")
         );
     }
 
@@ -44,7 +61,7 @@ public class FirestoreOrdenRepository extends AbstractFirestoreRepository<Orden>
     protected Map<String, Object> entityToMap(Orden orden) {
         Map<String, Object> map = new HashMap<>();
         map.put("precio", toCents(orden.precio()));
-        
+
         if (orden.pedido() != null) {
             Map<String, Object> pMap = new HashMap<>();
             pMap.put("id", orden.pedido().id());
@@ -58,6 +75,7 @@ public class FirestoreOrdenRepository extends AbstractFirestoreRepository<Orden>
             plMap.put("id", orden.plato().id());
             plMap.put("nombre", orden.plato().nombre());
             plMap.put("categoria", orden.plato().categoria().name());
+            plMap.put("imagen", orden.plato().imagen());
             map.put("plato", plMap);
         }
 
@@ -74,7 +92,15 @@ public class FirestoreOrdenRepository extends AbstractFirestoreRepository<Orden>
 
     @Override
     protected Orden createWithId(Orden orden, String id) {
-        return new Orden(id, orden.pedido(), orden.plato(), orden.precio(), orden.ordenEstado(), orden.fecha(), orden.detalles());
+        return new Orden(
+                id,
+                orden.pedido(),
+                orden.plato(),
+                orden.precio(),
+                orden.ordenEstado(),
+                orden.fecha(),
+                orden.detalles()
+        );
     }
 
     @Override

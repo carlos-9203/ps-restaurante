@@ -26,7 +26,8 @@ public class PlatoService {
                 Categoria.valueOf(request.categoria.trim()),
                 request.descripcion.trim(),
                 new BigDecimal(request.precio.trim()),
-                request.estaActivo
+                request.estaActivo,
+                request.imagen.trim()
         );
 
         return repository.save(plato);
@@ -49,7 +50,8 @@ public class PlatoService {
                 Categoria.valueOf(request.categoria.trim()),
                 request.descripcion.trim(),
                 new BigDecimal(request.precio.trim()),
-                request.estaActivo
+                request.estaActivo,
+                request.imagen.trim()
         );
 
         return repository.update(id, actualizado);
@@ -63,20 +65,29 @@ public class PlatoService {
         if (request == null) {
             throw new IllegalArgumentException("El cuerpo de la petición no puede ser nulo");
         }
+
         if (request.nombre == null || request.nombre.isBlank()) {
             throw new IllegalArgumentException("El nombre es obligatorio");
         }
+
         if (request.categoria == null || request.categoria.isBlank()) {
             throw new IllegalArgumentException("La categoría es obligatoria");
         }
+
         if (request.descripcion == null || request.descripcion.isBlank()) {
             throw new IllegalArgumentException("La descripción es obligatoria");
         }
+
         if (request.precio == null || request.precio.isBlank()) {
             throw new IllegalArgumentException("El precio es obligatorio");
         }
+
         if (request.estaActivo == null) {
             throw new IllegalArgumentException("El estado activo es obligatorio");
+        }
+
+        if (request.imagen == null || request.imagen.isBlank()) {
+            throw new IllegalArgumentException("La imagen es obligatoria");
         }
 
         try {

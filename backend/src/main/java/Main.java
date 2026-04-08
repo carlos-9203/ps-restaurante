@@ -55,8 +55,8 @@ public class Main {
         FirestoreOrdenRepository ordenRepository = new FirestoreOrdenRepository(db);
         FirestoreNotificacionRepository notificacionRepository = new FirestoreNotificacionRepository(db);
 
-        //MesaSeeder.seed(mesaRepository);
-        //PlatoSeeder.seed(platoRepository);
+        MesaSeeder.seed(mesaRepository);
+        PlatoSeeder.seed(platoRepository);
 
         PlatoService platoService = new PlatoService(platoRepository);
         MesaService mesaService = new MesaService(mesaRepository);

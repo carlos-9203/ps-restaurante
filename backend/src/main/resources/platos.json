@@ -1,0 +1,165 @@
+[
+  {
+    "nombre": "Agua mineral",
+    "categoria": "Bebida",
+    "descripcion": "Botella de agua mineral de 50cl",
+    "precio": "1.50",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/water,bottle?lock=101"
+  },
+  {
+    "nombre": "Coca-Cola",
+    "categoria": "Bebida",
+    "descripcion": "Refresco de cola en lata",
+    "precio": "2.20",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/coke,soft-drink?lock=102"
+  },
+  {
+    "nombre": "Fanta Naranja",
+    "categoria": "Bebida",
+    "descripcion": "Refresco de naranja en lata",
+    "precio": "2.20",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/orange,soda?lock=103"
+  },
+  {
+    "nombre": "Nestea",
+    "categoria": "Bebida",
+    "descripcion": "Té frío al limón",
+    "precio": "2.40",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/iced-tea,drink?lock=104"
+  },
+  {
+    "nombre": "Cerveza",
+    "categoria": "Bebida",
+    "descripcion": "Cerveza rubia de botella",
+    "precio": "2.80",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/beer,drink?lock=105"
+  },
+
+  {
+    "nombre": "Ensalada César",
+    "categoria": "Entrante",
+    "descripcion": "Lechuga, pollo, parmesano, picatostes y salsa César",
+    "precio": "6.50",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/caesar-salad,salad?lock=201"
+  },
+  {
+    "nombre": "Papas Bravas",
+    "categoria": "Entrante",
+    "descripcion": "Patatas fritas con salsa brava casera",
+    "precio": "5.50",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/potatoes,fries,tapas?lock=202"
+  },
+  {
+    "nombre": "Croquetas de pollo",
+    "categoria": "Entrante",
+    "descripcion": "Croquetas caseras de pollo, 8 unidades",
+    "precio": "6.00",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/croquettes,food?lock=203"
+  },
+  {
+    "nombre": "Nachos con queso",
+    "categoria": "Entrante",
+    "descripcion": "Nachos con cheddar fundido y jalapeños",
+    "precio": "7.00",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/nachos,cheese?lock=204"
+  },
+  {
+    "nombre": "Queso frito",
+    "categoria": "Entrante",
+    "descripcion": "Tiras de queso rebozado con mermelada",
+    "precio": "6.80",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/fried-cheese,food?lock=205"
+  },
+
+  {
+    "nombre": "Hamburguesa completa",
+    "categoria": "Principal",
+    "descripcion": "Hamburguesa de ternera con queso, bacon y papas",
+    "precio": "10.90",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/burger,hamburger?lock=301"
+  },
+  {
+    "nombre": "Pizza barbacoa",
+    "categoria": "Principal",
+    "descripcion": "Pizza con salsa barbacoa, carne y queso",
+    "precio": "11.50",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/pizza,barbecue?lock=302"
+  },
+  {
+    "nombre": "Pasta carbonara",
+    "categoria": "Principal",
+    "descripcion": "Pasta con salsa carbonara y parmesano",
+    "precio": "9.80",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/pasta,carbonara?lock=303"
+  },
+  {
+    "nombre": "Pollo a la plancha",
+    "categoria": "Principal",
+    "descripcion": "Pechuga de pollo a la plancha con guarnición",
+    "precio": "9.50",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/grilled-chicken,food?lock=304"
+  },
+  {
+    "nombre": "Salmón al horno",
+    "categoria": "Principal",
+    "descripcion": "Lomo de salmón con verduras salteadas",
+    "precio": "13.20",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/salmon,fish,dish?lock=305"
+  },
+
+  {
+    "nombre": "Tarta de queso",
+    "categoria": "Postre",
+    "descripcion": "Porción de tarta de queso al horno",
+    "precio": "4.80",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/cheesecake,dessert?lock=401"
+  },
+  {
+    "nombre": "Brownie con helado",
+    "categoria": "Postre",
+    "descripcion": "Brownie templado con bola de vainilla",
+    "precio": "5.20",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/brownie,ice-cream,dessert?lock=402"
+  },
+  {
+    "nombre": "Helado variado",
+    "categoria": "Postre",
+    "descripcion": "Copa de helado de varios sabores",
+    "precio": "4.50",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/ice-cream,dessert?lock=403"
+  },
+  {
+    "nombre": "Fruta del día",
+    "categoria": "Postre",
+    "descripcion": "Selección de fruta fresca de temporada",
+    "precio": "3.90",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/fruit,dessert?lock=404"
+  },
+  {
+    "nombre": "Mousse de chocolate",
+    "categoria": "Postre",
+    "descripcion": "Mousse cremosa de chocolate",
+    "precio": "4.60",
+    "estaActivo": true,
+    "imagen": "https://loremflickr.com/640/480/chocolate-mousse,dessert?lock=405"
+  }
+]

@@ -6,4 +6,5 @@ public class PlatoRequest {
     public String descripcion;
     public String precio;
     public Boolean estaActivo;
+    public String imagen;
 }
