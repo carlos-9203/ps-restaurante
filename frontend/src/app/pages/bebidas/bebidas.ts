@@ -69,11 +69,15 @@ export class BebidasComponent {
   );
 
   constructor() {
-    interval(2000)
+    interval(2500)
       .pipe(
         startWith(0),
-        switchMap(() =>
-          combineLatest([
+        switchMap(() => {
+          if (this.procesandoPedidoId()) {
+            return of(null);
+          }
+
+          return combineLatest([
             this.ordenesApi.obtenerPendientesBarra(),
             this.ordenesApi.obtenerEnPreparacionBarra(),
             this.ordenesApi.obtenerListasBarra(),
@@ -86,13 +90,18 @@ export class BebidasComponent {
                 [] as OrdenCocinaResponse[],
                 [] as OrdenCocinaResponse[],
                 [] as OrdenCocinaResponse[],
-              ]);
+              ] as [OrdenCocinaResponse[], OrdenCocinaResponse[], OrdenCocinaResponse[]]);
             }),
-          ),
-        ),
+          );
+        }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(([pendientes, enPreparacion, listas]) => {
+      .subscribe((resultado) => {
+        if (resultado === null) {
+          return;
+        }
+
+        const [pendientes, enPreparacion, listas] = resultado;
         const todas = [...pendientes, ...enPreparacion, ...listas];
         this.pedidos.set(this.agruparPorPedido(todas));
         this.cargando.set(false);
@@ -101,11 +110,12 @@ export class BebidasComponent {
   }
 
   avanzarEstado(pedido: PedidoBebidaAgrupado): void {
-    if (!pedido.ordenesIds.length) {
+    if (!pedido.ordenesIds.length || this.procesandoPedidoId()) {
       return;
     }
 
     this.procesandoPedidoId.set(pedido.pedidoId);
+    this.error.set(null);
 
     const nuevoEstado: EstadoVisualPedido =
       pedido.estado === 'pendiente' ? 'preparando' : 'listo';
@@ -122,6 +132,7 @@ export class BebidasComponent {
       .subscribe({
         next: () => {
           this.procesandoPedidoId.set(null);
+          this.recargar();
         },
         error: (error) => {
           console.error(error);
@@ -133,11 +144,12 @@ export class BebidasComponent {
   }
 
   retrocederEstado(pedido: PedidoBebidaAgrupado): void {
-    if (!pedido.ordenesIds.length) {
+    if (!pedido.ordenesIds.length || this.procesandoPedidoId()) {
       return;
     }
 
     this.procesandoPedidoId.set(pedido.pedidoId);
+    this.error.set(null);
 
     const nuevoEstado: EstadoVisualPedido =
       pedido.estado === 'listo' ? 'preparando' : 'pendiente';
@@ -154,6 +166,7 @@ export class BebidasComponent {
       .subscribe({
         next: () => {
           this.procesandoPedidoId.set(null);
+          this.recargar();
         },
         error: (error) => {
           console.error(error);
@@ -175,6 +188,12 @@ export class BebidasComponent {
         next: ([pendientes, enPreparacion, listas]) => {
           const todas = [...pendientes, ...enPreparacion, ...listas];
           this.pedidos.set(this.agruparPorPedido(todas));
+          this.cargando.set(false);
+          this.error.set(null);
+        },
+        error: (error) => {
+          console.error(error);
+          this.error.set('No se pudieron recargar las bebidas.');
         },
       });
   }

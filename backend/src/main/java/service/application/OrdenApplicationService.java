@@ -296,7 +296,9 @@ public class OrdenApplicationService {
         }
 
         boolean tieneMesas = cuentaBase.mesas() != null && !cuentaBase.mesas().isEmpty();
-        if (tieneMesas) {
+        boolean tienePassword = cuentaBase.password() != null;
+
+        if (tieneMesas && tienePassword) {
             return cuentaBase;
         }
 
