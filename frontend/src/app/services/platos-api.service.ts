@@ -1,0 +1,20 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { map, Observable } from 'rxjs';
+import { PlatoApi } from '../models/plato.model';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class PlatosApiService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = 'http://localhost:7070';
+
+  obtenerPlatos(): Observable<PlatoApi[]> {
+    return this.http.get<PlatoApi[]>(`${this.apiUrl}/platos`).pipe(
+      map((platos) =>
+        platos.filter((plato) => plato.estaActivo)
+      )
+    );
+  }
+}

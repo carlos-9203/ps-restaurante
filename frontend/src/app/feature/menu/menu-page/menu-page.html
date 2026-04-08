@@ -1,44 +1,126 @@
-<div class="menu-layout">
+<div class="menu-page">
   <app-header></app-header>
 
-  <main class="menu-content">
-    <div class="platos-grid">
-      @for (plato of platos(); track plato.id) {
+  <main class="menu-main">
+    <section class="hero-card">
+      <div class="hero-text">
+        <p class="hero-kicker">Carta digital</p>
+        <h1 class="hero-title">Descubre nuestro menú</h1>
+        <p class="hero-subtitle">
+          Consulta los platos disponibles, elige lo que te apetezca y prepara tu pedido
+          cómodamente desde el móvil.
+        </p>
+      </div>
+    </section>
 
-        <div class="plato-card-wrapper">
+    <section class="filtros-card">
+      <button
+        type="button"
+        class="filtro-chip"
+        [class.filtro-chip--activo]="categoriaSeleccionada() === 'Todos'"
+        (click)="seleccionarCategoria('Todos')"
+      >
+        Todos
+      </button>
 
-          <div class="plato-card"
-               [class.clickable]="plato.cantidad === 0"
-               (click)="plato.cantidad === 0 ? incrementar(plato.id) : null">
-
-            <div class="plato-img-placeholder">
-              <span class="icon">🖼️</span>
-            </div>
-            <div class="plato-title">
-              {{ plato.nombre }}
-            </div>
-          </div>
-
-          @if (plato.cantidad > 0) {
-            <div class="cantidad-control">
-              <button class="btn-circular" (click)="decrementar(plato.id)">−</button>
-              <span class="cantidad-numero">{{ plato.cantidad }}</span>
-              <button class="btn-circular" (click)="incrementar(plato.id)">+</button>
-            </div>
-          }
-
-        </div>
-
+      @for (categoria of categorias; track categoria) {
+        <button
+          type="button"
+          class="filtro-chip"
+          [class.filtro-chip--activo]="categoriaSeleccionada() === categoria"
+          (click)="seleccionarCategoria(categoria)"
+        >
+          {{ categoria }}
+        </button>
       }
-    </div>
+    </section>
+
+    @if (cargando()) {
+      <section class="estado-card">
+        <div class="spinner"></div>
+        <p>Cargando carta...</p>
+      </section>
+    } @else if (error()) {
+      <section class="estado-card">
+        <p class="estado-error">{{ error() }}</p>
+        <button type="button" class="btn-reintentar" (click)="recargar()">
+          Reintentar
+        </button>
+      </section>
+    } @else if (platosFiltrados().length === 0) {
+      <section class="estado-card">
+        <p>No hay platos disponibles en esta categoría.</p>
+      </section>
+    } @else {
+      <section class="platos-grid">
+        @for (plato of platosFiltrados(); track trackByPlato($index, plato)) {
+          <article class="plato-card">
+            <div class="plato-imagen-wrapper">
+              <img
+                class="plato-imagen"
+                [src]="plato.imagen"
+                [alt]="plato.nombre"
+                loading="lazy"
+                (error)="onImageError($event)"
+              />
+              <span class="plato-categoria">{{ plato.categoria }}</span>
+            </div>
+
+            <div class="plato-body">
+              <div class="plato-header">
+                <h2 class="plato-nombre">{{ plato.nombre }}</h2>
+                <span class="plato-precio">{{ plato.precio | number:'1.2-2' }} €</span>
+              </div>
+
+              <p class="plato-descripcion">
+                {{ plato.descripcion }}
+              </p>
+
+              <div class="plato-actions">
+                <button
+                  type="button"
+                  class="cantidad-btn"
+                  (click)="decrementar(plato.id)"
+                  [disabled]="plato.cantidad === 0"
+                  aria-label="Quitar una unidad"
+                >
+                  −
+                </button>
+
+                <div class="cantidad-box">
+                  <span class="cantidad-label">Cantidad</span>
+                  <span class="cantidad-valor">{{ plato.cantidad }}</span>
+                </div>
+
+                <button
+                  type="button"
+                  class="cantidad-btn cantidad-btn--primary"
+                  (click)="incrementar(plato.id)"
+                  aria-label="Añadir una unidad"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </section>
+    }
   </main>
 
-  <footer class="app-footer"></footer>
-
   @if (totalSeleccionado() > 0) {
-    <div class="barra-pedido-flotante">
-      <button class="btn-realizar-pedido" (click)="enviarPedido()">
-        REALIZAR PEDIDO ({{ totalSeleccionado() }})
+    <div class="pedido-bar">
+      <div class="pedido-bar__summary">
+        <span class="pedido-bar__items">
+          {{ totalSeleccionado() }} {{ totalSeleccionado() === 1 ? 'producto' : 'productos' }}
+        </span>
+        <strong class="pedido-bar__price">
+          {{ importeSeleccionado() | number:'1.2-2' }} €
+        </strong>
+      </div>
+
+      <button type="button" class="pedido-bar__button" (click)="enviarPedido()">
+        Realizar pedido
       </button>
     </div>
   }
