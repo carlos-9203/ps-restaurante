@@ -19,6 +19,9 @@ export class TableroPedidos implements OnInit, OnDestroy {
   private intervaloRefresco?: number;
   private intervaloReloj?: number;
 
+  private readonly pollingMs = 3000;
+  private readonly refreshAfterWriteMs = 1500;
+
   readonly cargando = signal(true);
   readonly actualizando = signal(false);
   readonly error = signal<string | null>(null);
@@ -29,6 +32,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
   readonly ahora = signal(Date.now());
   readonly ordenDetalleAbiertaId = signal<string | null>(null);
+  readonly pausadoHasta = signal<number>(0);
 
   readonly totalOrdenes = computed(
     () =>
@@ -41,10 +45,10 @@ export class TableroPedidos implements OnInit, OnDestroy {
     this.cargarTablero(true);
 
     this.intervaloRefresco = window.setInterval(() => {
-      if (!this.actualizando()) {
+      if (!this.estaSincronizacionPausada()) {
         this.cargarTablero(false);
       }
-    }, 2500);
+    }, this.pollingMs);
 
     this.intervaloReloj = window.setInterval(() => {
       this.ahora.set(Date.now());
@@ -84,25 +88,18 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
     this.actualizando.set(true);
     this.error.set(null);
-
-    this.ordenesPendientes.update((lista) => lista.filter((o) => o.id !== ordenId));
-    this.ordenesPreparacion.update((lista) => [
-      { ...orden, ordenEstado: 'Preparación' },
-      ...lista,
-    ]);
+    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
 
     this.ordenesApiService
       .marcarEnPreparacion(ordenId)
       .pipe(take(1))
       .subscribe({
         next: () => {
-          this.actualizando.set(false);
-          this.cargarTablero(false);
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
         error: () => {
-          this.actualizando.set(false);
           this.error.set('No se ha podido actualizar el estado de la orden.');
-          this.cargarTablero(false);
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
       });
   }
@@ -118,26 +115,18 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
     this.actualizando.set(true);
     this.error.set(null);
-
-    this.ordenesPreparacion.update((lista) => lista.filter((o) => o.id !== ordenId));
-    this.ordenesListas.update((lista) => lista.filter((o) => o.id !== ordenId));
-    this.ordenesPendientes.update((lista) => [
-      { ...orden, ordenEstado: 'Pendiente' },
-      ...lista,
-    ]);
+    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
 
     this.ordenesApiService
       .marcarPendiente(ordenId)
       .pipe(take(1))
       .subscribe({
         next: () => {
-          this.actualizando.set(false);
-          this.cargarTablero(false);
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
         error: () => {
-          this.actualizando.set(false);
           this.error.set('No se ha podido actualizar el estado de la orden.');
-          this.cargarTablero(false);
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
       });
   }
@@ -150,25 +139,18 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
     this.actualizando.set(true);
     this.error.set(null);
-
-    this.ordenesPreparacion.update((lista) => lista.filter((o) => o.id !== ordenId));
-    this.ordenesListas.update((lista) => [
-      { ...orden, ordenEstado: 'Listo' },
-      ...lista,
-    ]);
+    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
 
     this.ordenesApiService
       .marcarLista(ordenId)
       .pipe(take(1))
       .subscribe({
         next: () => {
-          this.actualizando.set(false);
-          this.cargarTablero(false);
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
         error: () => {
-          this.actualizando.set(false);
           this.error.set('No se ha podido actualizar el estado de la orden.');
-          this.cargarTablero(false);
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
       });
   }
@@ -341,6 +323,20 @@ export class TableroPedidos implements OnInit, OnDestroy {
       'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop';
   }
 
+  private pausarSincronizacion(ms: number): void {
+    this.pausadoHasta.set(Date.now() + ms);
+  }
+
+  private estaSincronizacionPausada(): boolean {
+    return Date.now() < this.pausadoHasta();
+  }
+
+  private recargarConRetardo(ms: number): void {
+    window.setTimeout(() => {
+      this.cargarTablero(false);
+    }, ms);
+  }
+
   private diferenciaEnMinutos(fechaIso: string): number {
     const fecha = new Date(fechaIso).getTime();
     if (Number.isNaN(fecha)) {
@@ -377,7 +373,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
   }
 
   private cargarTablero(mostrarLoading: boolean): void {
-    if (this.actualizando()) {
+    if (this.estaSincronizacionPausada()) {
       return;
     }
 
@@ -403,6 +399,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
           this.ordenesPreparacion.set(preparacionFiltradas);
           this.ordenesListas.set(listasFiltradas);
           this.cargando.set(false);
+          this.actualizando.set(false);
 
           const abierta = this.ordenDetalleAbiertaId();
           if (abierta) {
@@ -420,6 +417,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
         error: () => {
           this.error.set('No se ha podido cargar el tablero de cocina.');
           this.cargando.set(false);
+          this.actualizando.set(false);
         },
       });
   }

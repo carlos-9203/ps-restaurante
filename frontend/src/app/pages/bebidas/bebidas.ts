@@ -39,9 +39,13 @@ export class BebidasComponent {
   private readonly ordenesApi = inject(OrdenesApiService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private readonly pollingMs = 2500;
+  private readonly refreshAfterWriteMs = 1500;
+
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly procesandoPedidoId = signal<string | null>(null);
+  readonly pausadoHasta = signal<number>(0);
 
   readonly pedidos = signal<PedidoBebidaAgrupado[]>([]);
 
@@ -69,11 +73,11 @@ export class BebidasComponent {
   );
 
   constructor() {
-    interval(2500)
+    interval(this.pollingMs)
       .pipe(
         startWith(0),
         switchMap(() => {
-          if (this.procesandoPedidoId()) {
+          if (this.estaSincronizacionPausada()) {
             return of(null);
           }
 
@@ -116,11 +120,7 @@ export class BebidasComponent {
 
     this.procesandoPedidoId.set(pedido.pedidoId);
     this.error.set(null);
-
-    const nuevoEstado: EstadoVisualPedido =
-      pedido.estado === 'pendiente' ? 'preparando' : 'listo';
-
-    this.actualizarEstadoLocal(pedido.pedidoId, nuevoEstado);
+    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
 
     const accion =
       pedido.estado === 'pendiente'
@@ -131,14 +131,12 @@ export class BebidasComponent {
       .pipe(take(1))
       .subscribe({
         next: () => {
-          this.procesandoPedidoId.set(null);
-          this.recargar();
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
         error: (error) => {
           console.error(error);
           this.error.set('No se pudo actualizar el estado del pedido de bebidas.');
-          this.procesandoPedidoId.set(null);
-          this.recargar();
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
       });
   }
@@ -150,11 +148,7 @@ export class BebidasComponent {
 
     this.procesandoPedidoId.set(pedido.pedidoId);
     this.error.set(null);
-
-    const nuevoEstado: EstadoVisualPedido =
-      pedido.estado === 'listo' ? 'preparando' : 'pendiente';
-
-    this.actualizarEstadoLocal(pedido.pedidoId, nuevoEstado);
+    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
 
     const accion =
       pedido.estado === 'listo'
@@ -165,16 +159,28 @@ export class BebidasComponent {
       .pipe(take(1))
       .subscribe({
         next: () => {
-          this.procesandoPedidoId.set(null);
-          this.recargar();
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
         error: (error) => {
           console.error(error);
           this.error.set('No se pudo actualizar el estado del pedido de bebidas.');
-          this.procesandoPedidoId.set(null);
-          this.recargar();
+          this.recargarConRetardo(this.refreshAfterWriteMs);
         },
       });
+  }
+
+  private pausarSincronizacion(ms: number): void {
+    this.pausadoHasta.set(Date.now() + ms);
+  }
+
+  private estaSincronizacionPausada(): boolean {
+    return Date.now() < this.pausadoHasta();
+  }
+
+  private recargarConRetardo(ms: number): void {
+    window.setTimeout(() => {
+      this.recargar();
+    }, ms);
   }
 
   private recargar(): void {
@@ -190,23 +196,14 @@ export class BebidasComponent {
           this.pedidos.set(this.agruparPorPedido(todas));
           this.cargando.set(false);
           this.error.set(null);
+          this.procesandoPedidoId.set(null);
         },
         error: (error) => {
           console.error(error);
           this.error.set('No se pudieron recargar las bebidas.');
+          this.procesandoPedidoId.set(null);
         },
       });
-  }
-
-  private actualizarEstadoLocal(
-    pedidoId: string,
-    estado: EstadoVisualPedido,
-  ): void {
-    this.pedidos.update((lista) =>
-      lista.map((pedido) =>
-        pedido.pedidoId === pedidoId ? { ...pedido, estado } : pedido,
-      ),
-    );
   }
 
   private agruparPorPedido(ordenes: OrdenCocinaResponse[]): PedidoBebidaAgrupado[] {
