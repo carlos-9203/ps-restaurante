@@ -14,7 +14,7 @@ import {
   standalone: true,
   imports: [CommonModule, DragDropModule],
   templateUrl: './tablero-pedidos.component.html',
-  styleUrls: ['./../../../styles.css']
+  styleUrls: ['./tablero-pedidos.css']
 })
 export class TableroPedidos implements OnInit {
 

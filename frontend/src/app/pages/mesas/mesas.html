@@ -1,118 +1,84 @@
-<div class="mesas-page">
-  <div class="mesas-topbar" [class.panel-abierto]="!!mesaSeleccionada()">
-    <div class="tabs-zona">
-      <button
-        type="button"
-        [class.active]="zona() === 'interior'"
-        (click)="cambiarZona('interior')">
-        Interior
-      </button>
+<div class="mesas-page"
+     (click)="cerrarSeleccion($event)"
+     [class.panel-abierto]="mesaSeleccionada()">
 
-      <button
-        type="button"
-        [class.active]="zona() === 'terraza'"
-        (click)="cambiarZona('terraza')">
-        Terraza
-      </button>
+  @if (error()) {
+    <div class="alert-error">
+      {{ error() }}
+    </div>
+  }
+
+  <div class="controles" [class.seleccion-activa]="mesaSeleccionada()">
+    <div class="zonas">
+      <button [class.activo]="zona() === 'interior'" (click)="cambiarZona('interior')">INTERIOR</button>
+      <button [class.activo]="zona() === 'terraza'" (click)="cambiarZona('terraza')">TERRAZA</button>
     </div>
 
-    <div></div>
-
-    <div class="mesas-topbar-right">
-      <button type="button" class="edit-btn" disabled>Editar</button>
-
-      <div class="estado-legend">
-        <span class="legend-item">
-          <span class="legend-dot legend-dot--ocupada"></span>
-          Ocupado
-        </span>
-
-        <span class="legend-item">
-          <span class="legend-dot legend-dot--reservada"></span>
-          Reservado
-        </span>
-
-        <span class="legend-item">
-          <span class="legend-dot legend-dot--libre"></span>
-          Libre
-        </span>
+    <div class="acciones-derecha">
+      <button class="btn-editar">EDITAR</button>
+      <div class="leyenda">
+        <div class="pill"><span class="dot ocupada"></span> Ocupado</div>
+        <div class="pill"><span class="dot reservada"></span> Reservado</div>
+        <div class="pill"><span class="dot libre"></span> Libre</div>
       </div>
     </div>
   </div>
 
-  @if (error()) {
-    <p class="error">{{ error() }}</p>
-  }
-
-  @if (cargando()) {
-    <p>Cargando mesas...</p>
-  } @else {
-    <div class="mesas-layout" [class.panel-abierto]="!!mesaSeleccionada()">
-      <section class="grid-mesas">
+  <div class="contenido">
+    @if (cargando()) {
+      <div class="loading-spinner">
+        Cargando mesas...
+      </div>
+    } @else {
+      <div class="grid-mesas" [class.layout-terraza]="zona() === 'terraza'">
         @for (mesa of mesasActuales(); track mesa.id) {
-          <div (click)="seleccionar(mesa)">
-            <app-mesa-card
-              [numero]="mesa.id"
-              [capacidad]="mesa.capacidad"
-              [estado]="mesa.estado"
-              [seleccionada]="mesaSeleccionada()?.id === mesa.id">
-            </app-mesa-card>
-          </div>
+          <app-mesa-card
+            [numero]="mesa.id"
+            [capacidad]="mesa.capacidad"
+            [estado]="mesa.estado"
+            [seleccionada]="mesaSeleccionada()?.id === mesa.id"
+            (click)="seleccionar(mesa); $event.stopPropagation()">
+          </app-mesa-card>
         }
-      </section>
+      </div>
+    }
 
-      @if (mesaSeleccionada(); as mesaSel) {
-        <aside class="detalle-columna">
-          <app-mesa-detalle
-            [mesa]="mesaSel"
-            [accionEnCurso]="accionMesaId() === mesaSel.id || procesandoCobro()"
-            (ocupar)="ocuparMesa($event)"
-            (cobrar)="abrirCobro($event)">
-          </app-mesa-detalle>
-        </aside>
-      }
-    </div>
-  }
+    @if (mesaSeleccionada(); as mesaSel) {
+      <div class="sidebar-detalle">
+        <app-mesa-detalle
+          [mesa]="mesaSel"
+          [accionEnCurso]="accionMesaId() === mesaSel.id"
+          (ocupar)="ocuparMesa($event)"
+          (cobrar)="abrirCobro($event)">
+        </app-mesa-detalle>
+      </div>
+    }
+  </div>
 
   @if (mostrarModalCobro()) {
-    <div class="modal-overlay" (click)="cerrarModalCobro()">
-      <div class="modal-cobro" (click)="$event.stopPropagation()">
-        <h3>Confirmar cobro</h3>
+    <div class="modal-overlay" (click)="$event.stopPropagation(); cerrarModalCobro()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h2>Cobrar Mesa {{ mesaCobroId() }}</h2>
 
         @if (cargandoCobro()) {
-          <p>Cargando total de la cuenta...</p>
-        } @else {
-          <p class="modal-texto">
-            Se va a cobrar el total de la cuenta asociada a la mesa
-            <strong>{{ mesaCobroId() }}</strong>.
-          </p>
-
-          <div class="modal-total">
-            <span>Total</span>
-            <strong>{{ totalCobro() == null ? '0,00 €' : (totalCobro() | currency:'EUR':'symbol':'1.2-2') }}</strong>
+          <div class="modal-body">
+            <p class="loading-text">Calculando el total de la cuenta...</p>
           </div>
-
-          <p class="modal-aviso">
-            Al confirmar el pago, la cuenta quedará pagada y la mesa pasará automáticamente a libre.
-          </p>
-
-          <div class="modal-acciones">
-            <button
-              type="button"
-              class="modal-btn modal-btn--secundario"
-              (click)="cerrarModalCobro()"
-              [disabled]="procesandoCobro()">
+        } @else {
+          <div class="modal-body">
+            <p class="total-texto">Total a cobrar:</p>
+            <p class="total-cantidad">{{ totalCobro() | currency:'EUR' }}</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secundario"
+                    [disabled]="procesandoCobro()"
+                    (click)="cerrarModalCobro()">
               Cancelar
             </button>
-
-            <button
-              type="button"
-              class="modal-btn modal-btn--principal"
-              (click)="confirmarCobro()"
-              [disabled]="procesandoCobro()">
-  <span class="modal-btn__label">
-    {{ procesandoCobro() ? 'Cobrando...' : 'Confirmar pago' }}
-  </span>
+            <button class="btn-primario"
+                    [disabled]="procesandoCobro() || totalCobro() === null"
+                    (click)="confirmarCobro()">
+              {{ procesandoCobro() ? 'Procesando...' : 'Confirmar Pago' }}
             </button>
           </div>
         }

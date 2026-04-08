@@ -32,7 +32,7 @@ export class MesasComponent {
   readonly mesasActuales = computed(() =>
     this.mesas()
       .filter((mesa) => mesa.zona === this.zona())
-      .sort((a, b) => Number(a.id) - Number(b.id))
+      .sort((a, b) => Number(a.id) - Number(b.id)),
   );
 
   constructor() {
@@ -161,5 +161,14 @@ export class MesasComponent {
   private extraerMensaje(error: unknown): string {
     const err = error as { error?: { message?: string } };
     return err?.error?.message ?? 'Ha ocurrido un error al comunicar con el backend';
+  }
+
+  cerrarSeleccion(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    // Si el clic NO es en una mesa Y NO es en el panel de detalles
+    if (!target.closest('app-mesa-card') && !target.closest('.sidebar-detalle')) {
+      this.mesaSeleccionada.set(null);
+    }
   }
 }

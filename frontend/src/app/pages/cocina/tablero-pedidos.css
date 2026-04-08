@@ -1,0 +1,157 @@
+
+.vista-cocina {
+  background-color: #D6C2A1; /* Color beige de Figma */
+  min-height: 100vh;         /* Ocupa todo el alto de la ventana */
+  width: 100%;               /* Ocupa todo el ancho */
+  margin: 0;                 /* Asegura que no haya margen */
+  padding: 0;
+  display: flex;       /* Cambiamos a flex para controlar mejor el contenido */
+  flex-direction: column;              /* O el padding que quieras para separar el contenido interno */
+}
+
+/* 2. NAVBAR SUPERIOR */
+.navbar {
+  background-color: #D9B382; /* Tono café claro del header */
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  justify-content: space-between;
+}
+
+.simbolo-logo { font-size: 24px; }
+
+.nav-links a {
+  text-decoration: none;
+  color: #4B3F2F;
+  font-weight: 600;
+  margin: 0 20px;
+  font-size: 0.9rem;
+}
+
+/* 3. TÍTULO PRINCIPAL */
+.contenido-principal { padding: 40px; }
+
+.main-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 30px;
+}
+
+/* 4. TABLERO Y COLUMNAS */
+.contenedor-tablero {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.columna {
+  background-color: #E7DECC; /* Color crema de la columna */
+  border-radius: 20px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cabecera-columna {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+/* Colores específicos de columnas Figma */
+.col-pendiente .cabecera-columna { background-color: #71717A; }
+.col-preparacion .cabecera-columna { background-color: #A855F7; }
+.col-listo .cabecera-columna { background-color: #22C55E; }
+
+.dot {
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.titulo-columna {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.badge {
+  font-size: 0.6rem;
+  background: rgba(0,0,0,0.2);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* 5. TICKETS / COMANDAS */
+.ticket-pedido {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.producto-nombre {
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  font-size: 0.95rem;
+}
+
+.ticket-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #71717A;
+  margin-bottom: 15px;
+}
+
+/* 6. BOTONES DE ACCIÓN */
+.ticket-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 15px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+.btn-empezar { background-color: #D1D5DB; color: #374151; }
+.btn-listo { background-color: #22C55E; color: white; }
+
+/* Botón flecha para atrás */
+.btn-back {
+  background-color: #D1D5DB;
+  border: none;
+  border-radius: 8px;
+  width: 40px;
+  height: 35px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.btn-back.single { width: 100%; }
+
+/* Estilos de Drag & Drop */
+.cdk-drag-preview {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-radius: 12px;
+}
