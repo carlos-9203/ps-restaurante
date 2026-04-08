@@ -1,5 +1,6 @@
 package service.application;
 
+import model.Categoria;
 import model.Orden;
 import model.OrdenEstado;
 import model.Pedido;
@@ -7,7 +8,6 @@ import model.Plato;
 import repository.interfaces.OrdenRepository;
 import repository.interfaces.PedidoRepository;
 import repository.interfaces.PlatoRepository;
-import service.application.PedidoApplicationService;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -113,6 +113,18 @@ public class OrdenApplicationService {
                 .toList();
     }
 
+    public List<Orden> obtenerOrdenesCocinaPendientes() {
+        return obtenerOrdenesCocinaPorEstado(OrdenEstado.Pendiente);
+    }
+
+    public List<Orden> obtenerOrdenesCocinaEnPreparacion() {
+        return obtenerOrdenesCocinaPorEstado(OrdenEstado.Preparación);
+    }
+
+    public List<Orden> obtenerOrdenesCocinaListas() {
+        return obtenerOrdenesCocinaPorEstado(OrdenEstado.Listo);
+    }
+
     public Orden marcarOrdenPendiente(String ordenId) {
         Orden orden = obtenerOrdenPorId(ordenId);
 
@@ -172,5 +184,15 @@ public class OrdenApplicationService {
 
         return !ordenes.isEmpty()
                 && ordenes.stream().allMatch(orden -> orden.ordenEstado() == OrdenEstado.Listo);
+    }
+
+    private List<Orden> obtenerOrdenesCocinaPorEstado(OrdenEstado estado) {
+        return ordenRepository.findAll().stream()
+                .filter(orden -> orden.ordenEstado() == estado)
+                .filter(orden -> orden.plato() != null)
+                .filter(orden -> orden.plato().categoria() != null)
+                .filter(orden -> orden.plato().categoria() != Categoria.Bebida)
+                .sorted((a, b) -> a.fecha().compareTo(b.fecha()))
+                .toList();
     }
 }

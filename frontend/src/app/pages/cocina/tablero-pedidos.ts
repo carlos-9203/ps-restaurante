@@ -1,69 +1,191 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Pedido } from '../../models/pedido.model';
-
+import { forkJoin, take } from 'rxjs';
 import {
-  DragDropModule,
-  CdkDragDrop,
-  moveItemInArray,
-  transferArrayItem
-} from '@angular/cdk/drag-drop';
+  OrdenCocinaResponse,
+  OrdenesApiService,
+} from '../../services/ordenes-api.service';
 
 @Component({
   selector: 'app-tablero-pedidos',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [CommonModule],
   templateUrl: './tablero-pedidos.component.html',
-  styleUrls: ['./../../../styles.css']
+  styleUrls: ['./tablero-pedidos.component.css'],
 })
-export class TableroPedidos implements OnInit {
+export class TableroPedidos implements OnInit, OnDestroy {
+  private readonly ordenesApiService = inject(OrdenesApiService);
+  private intervaloRefresco?: number;
 
-  pedidosPendientes: Pedido[] = [];
-  pedidosPreparacion: Pedido[] = [];
-  pedidosListo: Pedido[] = [];
+  readonly cargando = signal(true);
+  readonly actualizando = signal(false);
+  readonly error = signal<string | null>(null);
+
+  readonly ordenesPendientes = signal<OrdenCocinaResponse[]>([]);
+  readonly ordenesPreparacion = signal<OrdenCocinaResponse[]>([]);
+  readonly ordenesListas = signal<OrdenCocinaResponse[]>([]);
+
+  readonly totalOrdenes = computed(
+    () =>
+      this.ordenesPendientes().length +
+      this.ordenesPreparacion().length +
+      this.ordenesListas().length,
+  );
 
   ngOnInit(): void {
-    // Datos de ejemplo
-    this.pedidosPendientes = [
-      { id: '101', mesa: '1', productos: [{ nombre: 'Pollo con papas', cantidad: 1 }], estado: 'PENDIENTE', horaPedido: new Date() },
-      { id: '102', mesa: '3', productos: [{ nombre: 'Hamburguesa Especial', cantidad: 2 }], estado: 'PENDIENTE', horaPedido: new Date() }
-    ];
+    this.cargarTablero(true);
+
+    this.intervaloRefresco = window.setInterval(() => {
+      this.cargarTablero(false);
+    }, 4000);
   }
 
-  // Lógica para botones (clic manual)
-  cambiarEstado(pedido: Pedido, nuevoEstado: 'PENDIENTE' | 'PREPARACION' | 'LISTO' | 'ENTREGADO') {
-    // Eliminamos de todas las listas
-    this.pedidosPendientes = this.pedidosPendientes.filter(p => p.id !== pedido.id);
-    this.pedidosPreparacion = this.pedidosPreparacion.filter(p => p.id !== pedido.id);
-    this.pedidosListo = this.pedidosListo.filter(p => p.id !== pedido.id);
-
-    if (nuevoEstado !== 'ENTREGADO') {
-      pedido.estado = nuevoEstado;
-      if (nuevoEstado === 'PENDIENTE') this.pedidosPendientes.push(pedido);
-      if (nuevoEstado === 'PREPARACION') this.pedidosPreparacion.push(pedido);
-      if (nuevoEstado === 'LISTO') this.pedidosListo.push(pedido);
+  ngOnDestroy(): void {
+    if (this.intervaloRefresco) {
+      window.clearInterval(this.intervaloRefresco);
     }
   }
 
-  // Lógica para arrastrar (Drag and Drop)
-  drop(event: CdkDragDrop<Pedido[]>) {
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-    } else {
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex,
-      );
+  recargar(): void {
+    this.cargarTablero(true);
+  }
 
-      // Al soltar, actualizamos el estado interno del objeto basado en la columna de destino
-      const pedido = event.container.data[event.currentIndex];
-      const idContenedor = event.container.element.nativeElement.id;
-
-      if (idContenedor === 'lista-pendiente') pedido.estado = 'PENDIENTE';
-      if (idContenedor === 'lista-preparacion') pedido.estado = 'PREPARACION';
-      if (idContenedor === 'lista-listo') pedido.estado = 'LISTO';
+  pasarAPreparacion(ordenId: string): void {
+    if (this.actualizando()) {
+      return;
     }
+
+    this.actualizando.set(true);
+
+    this.ordenesApiService
+      .marcarEnPreparacion(ordenId)
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          this.actualizando.set(false);
+          this.cargarTablero(false);
+        },
+        error: () => {
+          this.actualizando.set(false);
+          this.error.set('No se ha podido actualizar el estado de la orden.');
+        },
+      });
+  }
+
+  pasarAPendiente(ordenId: string): void {
+    if (this.actualizando()) {
+      return;
+    }
+
+    this.actualizando.set(true);
+
+    this.ordenesApiService
+      .marcarPendiente(ordenId)
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          this.actualizando.set(false);
+          this.cargarTablero(false);
+        },
+        error: () => {
+          this.actualizando.set(false);
+          this.error.set('No se ha podido actualizar el estado de la orden.');
+        },
+      });
+  }
+
+  pasarALista(ordenId: string): void {
+    if (this.actualizando()) {
+      return;
+    }
+
+    this.actualizando.set(true);
+
+    this.ordenesApiService
+      .marcarLista(ordenId)
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          this.actualizando.set(false);
+          this.cargarTablero(false);
+        },
+        error: () => {
+          this.actualizando.set(false);
+          this.error.set('No se ha podido actualizar el estado de la orden.');
+        },
+      });
+  }
+
+  mesaDeOrden(orden: OrdenCocinaResponse): string {
+    const mesas = orden.pedido?.cuenta?.mesas ?? [];
+
+    if (mesas.length === 0) {
+      return 'Mesa ?';
+    }
+
+    if (mesas.length === 1) {
+      return `Mesa ${mesas[0].id}`;
+    }
+
+    return `Mesas ${mesas.map((mesa) => mesa.id).join(', ')}`;
+  }
+
+  tiempoTranscurrido(fechaIso: string): string {
+    const fecha = new Date(fechaIso).getTime();
+    const ahora = Date.now();
+    const minutos = Math.max(0, Math.floor((ahora - fecha) / 60000));
+
+    if (minutos < 1) {
+      return 'Hace menos de 1 min';
+    }
+
+    if (minutos === 1) {
+      return 'Hace 1 min';
+    }
+
+    if (minutos < 60) {
+      return `Hace ${minutos} min`;
+    }
+
+    const horas = Math.floor(minutos / 60);
+
+    if (horas === 1) {
+      return 'Hace 1 h';
+    }
+
+    return `Hace ${horas} h`;
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src =
+      'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop';
+  }
+
+  private cargarTablero(mostrarLoading: boolean): void {
+    if (mostrarLoading) {
+      this.cargando.set(true);
+    }
+
+    this.error.set(null);
+
+    forkJoin({
+      pendientes: this.ordenesApiService.obtenerPendientesCocina(),
+      preparacion: this.ordenesApiService.obtenerEnPreparacionCocina(),
+      listas: this.ordenesApiService.obtenerListasCocina(),
+    })
+      .pipe(take(1))
+      .subscribe({
+        next: ({ pendientes, preparacion, listas }) => {
+          this.ordenesPendientes.set(pendientes);
+          this.ordenesPreparacion.set(preparacion);
+          this.ordenesListas.set(listas);
+          this.cargando.set(false);
+        },
+        error: () => {
+          this.error.set('No se ha podido cargar el tablero de cocina.');
+          this.cargando.set(false);
+        },
+      });
   }
 }

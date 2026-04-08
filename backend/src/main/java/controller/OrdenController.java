@@ -3,9 +3,9 @@ package controller;
 import dto.OrdenRequest;
 import io.javalin.apibuilder.EndpointGroup;
 import model.Orden;
+import service.OrdenService;
 import service.application.NotificacionApplicationService;
 import service.application.OrdenApplicationService;
-import service.OrdenService;
 import util.ApiError;
 
 import java.util.List;
@@ -32,7 +32,6 @@ public class OrdenController {
     public EndpointGroup routes() {
         return () -> {
             path("ordenes", () -> {
-
                 post(ctx -> {
                     OrdenRequest request = ctx.bodyAsClass(OrdenRequest.class);
                     Orden creada = service.create(request);
@@ -53,8 +52,21 @@ public class OrdenController {
                     get(ctx -> ctx.json(applicationService.obtenerOrdenesListas()));
                 });
 
-                path("pedido/{pedidoId}", () -> {
+                path("cocina", () -> {
+                    path("pendientes", () -> {
+                        get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaPendientes()));
+                    });
 
+                    path("en-preparacion", () -> {
+                        get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaEnPreparacion()));
+                    });
+
+                    path("listas", () -> {
+                        get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaListas()));
+                    });
+                });
+
+                path("pedido/{pedidoId}", () -> {
                     get(ctx -> {
                         String pedidoId = ctx.pathParam("pedidoId");
                         List<Orden> ordenes = applicationService.obtenerOrdenesDePedido(pedidoId);
@@ -76,7 +88,6 @@ public class OrdenController {
                 });
 
                 path("{id}", () -> {
-
                     get(ctx -> {
                         String id = ctx.pathParam("id");
                         Optional<Orden> orden = service.findById(id);
