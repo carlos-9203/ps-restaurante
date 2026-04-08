@@ -1,7 +1,7 @@
 <div class="menu-page">
   <app-header></app-header>
 
-  <main class="menu-main">
+  <main class="menu-main" [class.menu-main--blurred]="showConfirmPopup()">
     <section class="hero-card">
       <div class="hero-text">
         <p class="hero-kicker">Carta digital</p>
@@ -109,7 +109,7 @@
   </main>
 
   @if (totalSeleccionado() > 0) {
-    <div class="pedido-bar">
+    <div class="pedido-bar" [class.pedido-bar--blurred]="showConfirmPopup()">
       <div class="pedido-bar__summary">
         <span class="pedido-bar__items">
           {{ totalSeleccionado() }} {{ totalSeleccionado() === 1 ? 'producto' : 'productos' }}
@@ -119,9 +119,83 @@
         </strong>
       </div>
 
-      <button type="button" class="pedido-bar__button" (click)="enviarPedido()">
+      <button
+        type="button"
+        class="pedido-bar__button"
+        (click)="abrirConfirmacionPedido()"
+      >
         Realizar pedido
       </button>
+    </div>
+  }
+
+  @if (showConfirmPopup()) {
+    <div class="overlay" (click)="cerrarConfirmacionPedido()">
+      <section
+        class="confirm-modal"
+        (click)="$event.stopPropagation()"
+        aria-modal="true"
+        role="dialog"
+      >
+        <div class="confirm-modal__header">
+          <div>
+            <p class="confirm-modal__eyebrow">Confirmación</p>
+            <h2 class="confirm-modal__title">Revisa tu pedido</h2>
+          </div>
+
+          <button
+            type="button"
+            class="confirm-modal__close"
+            (click)="cerrarConfirmacionPedido()"
+            [disabled]="enviando()"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="confirm-modal__content">
+          @for (plato of platosSeleccionados(); track plato.id) {
+            <div class="resume-row">
+              <div class="resume-row__info">
+                <span class="resume-row__name">{{ plato.nombre }}</span>
+                <span class="resume-row__meta">
+                  {{ plato.cantidad }} × {{ plato.precio | number:'1.2-2' }} €
+                </span>
+              </div>
+
+              <strong class="resume-row__total">
+                {{ plato.cantidad * plato.precio | number:'1.2-2' }} €
+              </strong>
+            </div>
+          }
+
+          <div class="confirm-total">
+            <span>Total</span>
+            <strong>{{ importeSeleccionado() | number:'1.2-2' }} €</strong>
+          </div>
+        </div>
+
+        <div class="confirm-modal__actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarConfirmacionPedido()"
+            [disabled]="enviando()"
+          >
+            Seguir eligiendo
+          </button>
+
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="confirmarPedido()"
+            [disabled]="enviando()"
+          >
+            {{ enviando() ? 'Enviando...' : 'Confirmar pedido' }}
+          </button>
+        </div>
+      </section>
     </div>
   }
 </div>

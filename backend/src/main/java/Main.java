@@ -38,6 +38,7 @@ import util.MesaSeeder;
 import util.PlatoSeeder;
 
 public class Main {
+
     public static void main(String[] args) {
         FirebaseConfig.init();
         Firestore db = FirestoreClientProvider.getFirestore();
@@ -77,6 +78,7 @@ public class Main {
                 pedidoRepository,
                 cuentaRepository,
                 ordenRepository,
+                platoRepository,
                 mesaApplicationService
         );
 

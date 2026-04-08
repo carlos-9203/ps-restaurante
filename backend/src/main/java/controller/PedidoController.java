@@ -1,10 +1,12 @@
 package controller;
 
+import dto.CrearPedidoClienteRequest;
 import dto.PedidoRequest;
 import io.javalin.apibuilder.EndpointGroup;
+import model.Orden;
 import model.Pedido;
-import service.application.PedidoApplicationService;
 import service.PedidoService;
+import service.application.PedidoApplicationService;
 import util.ApiError;
 
 import java.util.List;
@@ -25,7 +27,6 @@ public class PedidoController {
     public EndpointGroup routes() {
         return () -> {
             path("pedidos", () -> {
-
                 post(ctx -> {
                     PedidoRequest request = ctx.bodyAsClass(PedidoRequest.class);
                     Pedido creado = service.create(request);
@@ -39,6 +40,23 @@ public class PedidoController {
                         String mesaId = ctx.pathParam("mesaId");
                         Pedido pedido = applicationService.crearPedidoDesdeMesa(mesaId);
                         ctx.status(201).json(pedido);
+                    });
+
+                    path("completo", () -> {
+                        post(ctx -> {
+                            String mesaId = ctx.pathParam("mesaId");
+                            CrearPedidoClienteRequest request = ctx.bodyAsClass(CrearPedidoClienteRequest.class);
+
+                            PedidoApplicationService.CrearPedidoResultado resultado =
+                                    applicationService.crearPedidoConOrdenesDesdeMesa(mesaId, request);
+
+                            CrearPedidoClienteResponse response = new CrearPedidoClienteResponse(
+                                    resultado.pedido(),
+                                    resultado.ordenes()
+                            );
+
+                            ctx.status(201).json(response);
+                        });
                     });
                 });
 
@@ -59,7 +77,6 @@ public class PedidoController {
                 });
 
                 path("{id}", () -> {
-
                     get(ctx -> {
                         String id = ctx.pathParam("id");
                         Optional<Pedido> pedido = service.findById(id);
@@ -104,5 +121,8 @@ public class PedidoController {
     }
 
     private record EstadoPedidoResponse(String pedidoId, boolean listo) {
+    }
+
+    private record CrearPedidoClienteResponse(Pedido pedido, List<Orden> ordenes) {
     }
 }

@@ -1,239 +1,418 @@
-.bill-layout {
-  display: flex;
-  flex-direction: column;
+:host {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.bill-page {
   min-height: 100vh;
-  background-color: #E6D3B8;
-  font-family: sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(212, 181, 150, 0.24), transparent 35%),
+    linear-gradient(180deg, #fffaf5 0%, #f6efe7 100%);
+  color: #2b2018;
 }
 
-.bill-content {
-  flex: 1;
-  padding: 30px 20px;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+.bill-main {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
+  transition: filter 0.25s ease;
 }
 
-/* --- ESTILOS DE LA TABLA (GRID) --- */
-.bill-header-row {
+.bill-main--blurred {
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.bill-hero {
+  background: linear-gradient(135deg, #2f2118 0%, #4f3728 100%);
+  color: #fffaf5;
+  border-radius: 24px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 18px 40px rgba(47, 33, 24, 0.16);
+}
+
+.bill-hero__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.bill-hero__title {
+  margin: 0;
+  font-size: clamp(1.45rem, 4vw, 2.15rem);
+}
+
+.bill-hero__subtitle {
+  margin: 0.7rem 0 0;
+  opacity: 0.92;
+  line-height: 1.5;
+}
+
+.bill-tabs {
   display: grid;
-  grid-template-columns: 2.5fr 1fr 1fr; /* Proporción de las 3 columnas */
-  margin-bottom: 20px;
-  font-size: 0.85rem;
-  color: #333;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.items-list {
-  flex: 1;
+.bill-tab {
+  border: 1px solid rgba(212, 181, 150, 0.55);
+  background: #fff;
+  color: #5a3e2b;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(76, 52, 36, 0.08);
+}
+
+.bill-tab--active {
+  background: #d4b596;
+  color: #22170f;
+  border-color: #d4b596;
+}
+
+.bill-empty {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 24px;
+  padding: 2.2rem 1.2rem;
+  border: 1px solid rgba(212, 181, 150, 0.4);
+  box-shadow: 0 14px 30px rgba(76, 52, 36, 0.08);
+}
+
+.bill-empty h2 {
+  margin: 0 0 0.5rem;
+}
+
+.bill-empty p {
+  margin: 0;
+  color: #6f5a4d;
+}
+
+.bill-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 24px;
+  border: 1px solid rgba(212, 181, 150, 0.35);
+  box-shadow: 0 16px 36px rgba(76, 52, 36, 0.08);
+  overflow: hidden;
+}
+
+.bill-card__header {
+  display: grid;
+  grid-template-columns: 1.8fr 0.7fr 0.9fr;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.85rem;
+  background: #f7efe8;
+  color: #7a6454;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bill-list {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Espacio entre filas */
 }
 
 .bill-row {
   display: grid;
-  grid-template-columns: 2.5fr 1fr 1fr;
-  color: #222;
-  font-size: 0.95rem;
+  grid-template-columns: 1.8fr 0.7fr 0.9fr;
+  gap: 0.75rem;
   align-items: center;
+  padding: 1rem;
+  border-top: 1px solid rgba(212, 181, 150, 0.28);
 }
 
-/* Alineaciones de cada columna */
-.col-desc {
-  text-align: left;
-  padding-right: 10px;
+.bill-row__desc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-.col-cant {
+.bill-row__desc strong {
+  color: #2f2118;
+}
+
+.bill-row__desc span {
+  color: #7a6454;
+  font-size: 0.92rem;
+}
+
+.bill-row__qty,
+.bill-row__price {
+  font-weight: 700;
+  color: #2f2118;
+}
+
+.bill-row__qty {
   text-align: center;
 }
 
-.col-precio {
-  text-align: center; /* En tu foto los precios parecen estar centrados o ligeramente a la derecha */
-}
-
-/* --- ESTILOS DEL TOTAL --- */
-.bill-total {
-  display: flex;
-  justify-content: center;
-  gap: 40px; /* Separación entre el texto y el número */
-  margin-top: 40px;
-  margin-bottom: 20px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #111;
-}
-
-/* --- FOOTER --- */
-.bill-footer {
-  height: 80px;
-  background-color: #D4B596;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0 10px;
-}
-
-.btn-footer {
-  background: none;
-  border: none;
-  font-size: 1rem;
-  color: #333;
-  font-family: sans-serif;
-  cursor: pointer;
-}
-
-.btn-footer.active-btn {
-  font-weight: 900;
-  color: #000;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-/* --- ESTILOS DE CUENTA DIVIDIDA --- */
-.split-group {
-  margin-bottom: 25px;
-}
-
-.split-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding-right: 20px;
-  font-size: 0.95rem;
-  color: #222;
-}
-
-.split-qty {
+.bill-row__price {
   text-align: right;
+  color: #7b4d22;
 }
 
-/* La caja gris con bordes redondeados */
-.split-box {
-  background-color: #d1c5b4;
-  border-radius: 12px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
-}
-
-.split-row {
+.bill-total-card {
+  margin-top: 1rem;
+  background: linear-gradient(135deg, #fff 0%, #fbf2ea 100%);
+  border-radius: 22px;
+  padding: 1rem 1.15rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border: 1px solid rgba(212, 181, 150, 0.4);
+  box-shadow: 0 12px 28px rgba(76, 52, 36, 0.08);
+}
+
+.bill-total-card span {
+  color: #6f5a4d;
+  font-weight: 700;
+}
+
+.bill-total-card strong {
+  color: #2f2118;
+  font-size: 1.18rem;
+}
+
+.bill-actions {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+}
+
+.bill-actions--split {
+  grid-template-columns: 1fr 1fr;
+}
+
+.bill-primary-btn,
+.bill-secondary-btn {
+  border: none;
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+  font-size: 0.98rem;
+  font-weight: 800;
   cursor: pointer;
 }
 
-/* El Checkbox Personalizado (Gris claro con check rojo) */
-.custom-checkbox {
-  width: 24px;
-  height: 24px;
-  background-color: #e2dcd2;
-  border-radius: 6px;
+.bill-primary-btn {
+  background: linear-gradient(135deg, #2f2118 0%, #5b3e2d 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(47, 33, 24, 0.18);
+}
+
+.bill-secondary-btn {
+  background: #efe3d5;
+  color: #2f2118;
+}
+
+.split-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.split-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 22px;
+  padding: 1rem;
+  border: 1px solid rgba(212, 181, 150, 0.35);
+  box-shadow: 0 14px 30px rgba(76, 52, 36, 0.08);
+}
+
+.split-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.9rem;
+}
+
+.split-card__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.split-card__header p {
+  margin: 0.3rem 0 0;
+  color: #7a6454;
+  font-size: 0.92rem;
+}
+
+.split-card__badge {
+  background: #f3e8dc;
+  color: #7b4d22;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.split-card__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.split-pill {
+  border: 1px solid rgba(212, 181, 150, 0.55);
+  background: #fff;
+  color: #4f3728;
+  border-radius: 999px;
+  padding: 0.72rem 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.split-pill--selected {
+  background: #d4b596;
+  color: #22170f;
+  border-color: #d4b596;
+}
+
+.bill-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(28, 18, 12, 0.45);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  padding: 1rem;
 }
 
-.custom-checkbox.checked {
-  background-color: #f5f5f5;
-  box-shadow: inset 0px 0px 3px rgba(0,0,0,0.1);
+.bill-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #fffaf5;
+  border-radius: 28px;
+  border: 1px solid rgba(212, 181, 150, 0.3);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  animation: billModalIn 0.22s ease;
 }
 
-.check-mark {
-  color: #d32f2f; /* Check rojo como en tu wireframe */
-  font-weight: bold;
-  font-size: 1.2rem;
+@keyframes billModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.bill-modal__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.2rem 1.2rem 0.6rem;
+}
+
+.bill-modal__eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9c7150;
+}
+
+.bill-modal__title {
+  margin: 0;
+  font-size: 1.35rem;
+  color: #2f2118;
+}
+
+.bill-modal__close {
+  border: none;
+  background: #f3e8dc;
+  color: #2f2118;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  font-size: 1.5rem;
+  cursor: pointer;
   line-height: 1;
 }
 
-/* --- ESTILOS DEL POPUP --- */
-.bill-content {
-  position: relative; /* Para que el popup se posicione dentro */
-}
-
-/* Desenfoque de la capa trasera */
-.blurred {
-  filter: blur(4px);
-  pointer-events: none; /* Evita clics en el fondo */
-  transition: filter 0.3s ease;
-}
-
-.popup-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 100;
-
-  /* USAMOS FLEXBOX PARA CENTRAR EL CONTENIDO */
+.bill-modal__content {
+  padding: 0.8rem 1.2rem 1rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px; /* Pequeño margen de seguridad para que no pegue a los bordes del móvil */
-  box-sizing: border-box;
-
-  background-color: rgba(0, 0, 0, 0.1);
-
-  animation: fadeIn 0.2s ease-out;
-}
-
-.popup-card {
-  background-color: #d1c5b4;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-
-
-  width: 100%;
-  max-width: 400px;
-
-  /* Si la cuenta es muy larga, permitimos hacer scroll */
-  max-height: 80%;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-height: 50vh;
   overflow-y: auto;
 }
 
-.empty-selection {
+.bill-modal__empty {
   text-align: center;
-  padding: 20px;
-  color: #555;
-  font-style: italic;
+  padding: 1.2rem 0.5rem;
+  color: #7a6454;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.bill-modal__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(212, 181, 150, 0.32);
 }
 
-/* --- VARIACIONES DEL FOOTER DINÁMICO --- */
-.btn-right {
-  margin-left: auto; /* Empuja el botón "Detalle" a la derecha */
-  padding-right: 20px;
+.bill-modal__row div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-.footer-split-pay {
+.bill-modal__row span {
+  color: #7a6454;
+  font-size: 0.92rem;
+}
+
+.bill-modal__total {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 0 15px;
+  padding: 1rem 0.2rem 0;
+  margin-top: 0.3rem;
+  border-top: 1px solid rgba(212, 181, 150, 0.45);
+  color: #2f2118;
 }
 
-.split-totals {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
+.bill-modal__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0 1.2rem 1.2rem;
 }
 
-.split-label {
-  font-size: 0.85rem;
-  color: #333;
-}
+@media (max-width: 640px) {
+  .bill-card__header,
+  .bill-row {
+    grid-template-columns: 1.5fr 0.7fr 0.9fr;
+  }
 
-.split-amount {
-  font-size: 1rem;
+  .bill-actions--split,
+  .bill-modal__actions {
+    grid-template-columns: 1fr;
+  }
 }

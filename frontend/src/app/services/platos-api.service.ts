@@ -12,9 +12,7 @@ export class PlatosApiService {
 
   obtenerPlatos(): Observable<PlatoApi[]> {
     return this.http.get<PlatoApi[]>(`${this.apiUrl}/platos`).pipe(
-      map((platos) =>
-        platos.filter((plato) => plato.estaActivo)
-      )
+      map((platos) => platos.filter((plato) => plato.estaActivo)),
     );
   }
 }

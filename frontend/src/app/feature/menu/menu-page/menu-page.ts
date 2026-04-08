@@ -1,10 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { take } from 'rxjs';
 import { Header } from '../../../shared/components/header/header';
-import { PlatoMenu, CategoriaPlato, PlatoApi } from '../../../models/plato.model';
-import { PlatosApiService } from '../../../services/platos-api.service';
 import { OrderService } from '../../../shared/services/order';
+import {
+  PedidosApiService,
+  CrearPedidoClienteRequest,
+} from '../../../services/pedidos-api.service';
+import { PlatosApiService } from '../../../services/platos-api.service';
+import { CategoriaPlato, PlatoApi, PlatoMenu } from '../../../models/plato.model';
 
 @Component({
   selector: 'app-menu-page',
@@ -15,12 +20,16 @@ import { OrderService } from '../../../shared/services/order';
 })
 export class MenuPage {
   private readonly platosApiService = inject(PlatosApiService);
+  private readonly pedidosApiService = inject(PedidosApiService);
   private readonly orderService = inject(OrderService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly cargando = signal(true);
+  readonly enviando = signal(false);
   readonly error = signal<string | null>(null);
   readonly categoriaSeleccionada = signal<CategoriaPlato | 'Todos'>('Todos');
   readonly platos = signal<PlatoMenu[]>([]);
+  readonly showConfirmPopup = signal(false);
 
   readonly categorias: ReadonlyArray<CategoriaPlato> = [
     'Bebida',
@@ -40,12 +49,19 @@ export class MenuPage {
     return lista.filter((plato) => plato.categoria === categoria);
   });
 
+  readonly platosSeleccionados = computed(() =>
+    this.platos().filter((plato) => plato.cantidad > 0),
+  );
+
   readonly totalSeleccionado = computed(() =>
-    this.platos().reduce((acc, plato) => acc + plato.cantidad, 0)
+    this.platos().reduce((acc, plato) => acc + plato.cantidad, 0),
   );
 
   readonly importeSeleccionado = computed(() =>
-    this.platos().reduce((acc, plato) => acc + plato.cantidad * Number(plato.precio), 0)
+    this.platos().reduce(
+      (acc, plato) => acc + plato.cantidad * Number(plato.precio),
+      0,
+    ),
   );
 
   constructor() {
@@ -61,8 +77,8 @@ export class MenuPage {
       lista.map((plato) =>
         plato.id === id
           ? { ...plato, cantidad: plato.cantidad + 1 }
-          : plato
-      )
+          : plato,
+      ),
     );
   }
 
@@ -71,35 +87,95 @@ export class MenuPage {
       lista.map((plato) =>
         plato.id === id && plato.cantidad > 0
           ? { ...plato, cantidad: plato.cantidad - 1 }
-          : plato
-      )
+          : plato,
+      ),
     );
   }
 
-  enviarPedido(): void {
-    const platosAPedir = this.platos()
-      .filter((plato) => plato.cantidad > 0)
-      .map((plato) => ({
-        id: plato.id,
-        nombre: plato.nombre,
-        precio: Number(plato.precio),
-        cantidad: plato.cantidad,
-        categoria: plato.categoria,
-        descripcion: plato.descripcion,
-        imagen: plato.imagen,
-      }));
-
-    if (platosAPedir.length === 0) {
+  abrirConfirmacionPedido(): void {
+    if (this.totalSeleccionado() === 0 || this.enviando()) {
       return;
     }
 
-    this.orderService.agregarPedido(platosAPedir);
+    this.showConfirmPopup.set(true);
+  }
 
-    this.platos.update((lista) =>
-      lista.map((plato) => ({ ...plato, cantidad: 0 }))
-    );
+  cerrarConfirmacionPedido(): void {
+    if (this.enviando()) {
+      return;
+    }
 
-    alert('¡Pedido añadido correctamente!');
+    this.showConfirmPopup.set(false);
+  }
+
+  confirmarPedido(): void {
+    if (this.enviando()) {
+      return;
+    }
+
+    const mesaId = this.route.snapshot.paramMap.get('id');
+
+    if (!mesaId) {
+      this.error.set('No se ha podido identificar la mesa.');
+      alert('No se ha podido identificar la mesa.');
+      return;
+    }
+
+    const platosSeleccionados = this.platosSeleccionados();
+
+    if (platosSeleccionados.length === 0) {
+      this.error.set('Debes seleccionar al menos un plato.');
+      alert('Debes seleccionar al menos un plato.');
+      return;
+    }
+
+    this.enviando.set(true);
+    this.error.set(null);
+
+    const body: CrearPedidoClienteRequest = {
+      items: platosSeleccionados.map((plato) => ({
+        platoId: plato.id,
+        cantidad: plato.cantidad,
+        detalles: '',
+      })),
+    };
+
+    this.pedidosApiService
+      .crearPedidoDesdeMesa(mesaId, body)
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          this.orderService.agregarPedido(
+            platosSeleccionados.map((plato) => ({
+              id: plato.id,
+              nombre: plato.nombre,
+              precio: Number(plato.precio),
+              cantidad: plato.cantidad,
+              categoria: plato.categoria,
+              descripcion: plato.descripcion,
+              imagen: plato.imagen,
+            })),
+          );
+
+          this.platos.update((lista) =>
+            lista.map((plato) => ({ ...plato, cantidad: 0 })),
+          );
+
+          this.enviando.set(false);
+          this.showConfirmPopup.set(false);
+          alert('¡Pedido enviado correctamente!');
+        },
+        error: (err) => {
+          const mensaje =
+            err?.error?.message ||
+            err?.error?.mensaje ||
+            'No se ha podido guardar el pedido en este momento.';
+
+          this.error.set(mensaje);
+          this.enviando.set(false);
+          alert(mensaje);
+        },
+      });
   }
 
   recargar(): void {

@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Header } from '../../../shared/components/header/header';
 import { OrderService } from '../../../shared/services/order';
@@ -11,31 +11,21 @@ import { OrderService } from '../../../shared/services/order';
   styleUrls: ['./bill-page.css'],
 })
 export class BillPage {
-  // Estado de la vista
-  viewMode = signal<'normal' | 'dividida'>('normal');
-  showDetailPopup = signal<boolean>(false);
+  readonly viewMode = signal<'normal' | 'dividida'>('normal');
+  readonly showDetailPopup = signal(false);
 
-  private orderService = inject(OrderService)
-  // Obtenemos los platos que el cliente ha pedido
-  pedidos = this.orderService.pedidosConfirmados;
+  private readonly orderService = inject(OrderService);
 
-  // Vista normal (no diviida)
-  totalNormal = computed(() => {
-    return this.pedidos().reduce((acc, item) => acc + item.cantidad * item.precioUnitario, 0);
+  readonly pedidos = this.orderService.pedidosConfirmados;
+
+  readonly totalNormal = computed(() => {
+    return this.pedidos().reduce(
+      (acc, item) => acc + item.cantidad * item.precioUnitario,
+      0,
+    );
   });
 
-  // Vista dividida
-  toggleSubItem(itemIndex: number, subItemId: string) {
-    this.pedidos.update((lista) => {
-      const nuevaLista = [...lista];
-      const subItem = nuevaLista[itemIndex].subItems.find((s) => s.id === subItemId);
-      if (subItem) subItem.seleccionado = !subItem.seleccionado;
-      return nuevaLista;
-    });
-  }
-
-  // Lista resumen (sólo lo que el usuario ha separado de la cuenta original)
-  pedidosSeleccionados = computed(() => {
+  readonly pedidosSeleccionados = computed(() => {
     return this.pedidos()
       .map((item) => {
         const seleccionados = item.subItems.filter((s) => s.seleccionado).length;
@@ -45,14 +35,43 @@ export class BillPage {
           precioUnitario: item.precioUnitario,
         };
       })
-      .filter((item) => item.cantidad > 0); // Oculta los platos que no tienen nada seleccionado
+      .filter((item) => item.cantidad > 0);
   });
 
-  // Total a pagar de la cuenta dividida
-  totalDividida = computed(() => {
+  readonly totalDividida = computed(() => {
     return this.pedidosSeleccionados().reduce(
       (acc, item) => acc + item.cantidad * item.precioUnitario,
       0,
     );
   });
+
+  cambiarVista(vista: 'normal' | 'dividida'): void {
+    this.viewMode.set(vista);
+    this.showDetailPopup.set(false);
+  }
+
+  toggleSubItem(itemIndex: number, subItemId: string): void {
+    this.pedidos.update((lista) => {
+      const nuevaLista = [...lista];
+      const subItem = nuevaLista[itemIndex].subItems.find((s) => s.id === subItemId);
+
+      if (subItem) {
+        subItem.seleccionado = !subItem.seleccionado;
+      }
+
+      return nuevaLista;
+    });
+  }
+
+  abrirDetalle(): void {
+    this.showDetailPopup.set(true);
+  }
+
+  cerrarDetalle(): void {
+    this.showDetailPopup.set(false);
+  }
+
+  cantidadSeleccionada(itemIndex: number): number {
+    return this.pedidos()[itemIndex].subItems.filter((s) => s.seleccionado).length;
+  }
 }
