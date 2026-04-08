@@ -41,7 +41,7 @@ export interface PedidoCreadoResponse {
 })
 export class PedidosApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:7070';
+  private readonly apiUrl = `http://${window.location.hostname}:7070`;
 
   crearPedidoDesdeMesa(
     mesaId: string,

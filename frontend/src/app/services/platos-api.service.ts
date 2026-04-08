@@ -8,7 +8,7 @@ import { PlatoApi } from '../models/plato.model';
 })
 export class PlatosApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:7070';
+  private readonly apiUrl = `http://${window.location.hostname}:7070`;
 
   obtenerPlatos(): Observable<PlatoApi[]> {
     return this.http.get<PlatoApi[]>(`${this.apiUrl}/platos`).pipe(

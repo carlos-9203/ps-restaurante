@@ -9,7 +9,7 @@ import { MESAS_LAYOUT } from '../data/mesas-layout';
 })
 export class MesasApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:7070';
+  private readonly apiUrl = `http://${window.location.hostname}:7070`;
 
   obtenerMesas(): Observable<MesaApi[]> {
     return this.http.get<MesaApi[]>(`${this.apiUrl}/mesas`);

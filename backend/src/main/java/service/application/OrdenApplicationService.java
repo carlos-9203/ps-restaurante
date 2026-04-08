@@ -2,7 +2,6 @@ package service.application;
 
 import model.Categoria;
 import model.Cuenta;
-import model.Mesa;
 import model.Orden;
 import model.OrdenEstado;
 import model.Pedido;
@@ -50,7 +49,6 @@ public class OrdenApplicationService {
     public Orden crearOrdenDesdePedidoYPlato(String pedidoId, String platoId, String detalles) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
-
         pedido = hidratarPedido(pedido);
 
         Plato plato = platoRepository.findById(platoId)
@@ -99,7 +97,6 @@ public class OrdenApplicationService {
     public Orden obtenerOrdenPorId(String ordenId) {
         Orden orden = ordenRepository.findById(ordenId)
                 .orElseThrow(() -> new IllegalArgumentException("La orden no existe"));
-
         return hidratarOrden(orden);
     }
 
@@ -136,6 +133,9 @@ public class OrdenApplicationService {
                 .toList();
     }
 
+    // =========================
+    // COCINA
+    // =========================
     public List<Orden> obtenerOrdenesCocinaPendientes() {
         return obtenerOrdenesCocinaPorEstado(OrdenEstado.Pendiente);
     }
@@ -146,6 +146,21 @@ public class OrdenApplicationService {
 
     public List<Orden> obtenerOrdenesCocinaListas() {
         return obtenerOrdenesCocinaPorEstado(OrdenEstado.Listo);
+    }
+
+    // =========================
+    // BARRA / BEBIDAS
+    // =========================
+    public List<Orden> obtenerOrdenesBarraPendientes() {
+        return obtenerOrdenesBarraPorEstado(OrdenEstado.Pendiente);
+    }
+
+    public List<Orden> obtenerOrdenesBarraEnPreparacion() {
+        return obtenerOrdenesBarraPorEstado(OrdenEstado.Preparación);
+    }
+
+    public List<Orden> obtenerOrdenesBarraListas() {
+        return obtenerOrdenesBarraPorEstado(OrdenEstado.Listo);
     }
 
     public Orden marcarOrdenPendiente(String ordenId) {
@@ -192,7 +207,7 @@ public class OrdenApplicationService {
                 orden.pedido(),
                 orden.plato(),
                 orden.precio(),
-                OrdenEstado.Listo,
+                orden.ordenEstado() == OrdenEstado.Entregado ? OrdenEstado.Entregado : OrdenEstado.Listo,
                 orden.fecha(),
                 orden.detalles()
         );
@@ -214,8 +229,32 @@ public class OrdenApplicationService {
                 .filter(orden -> orden.plato() != null)
                 .filter(orden -> orden.plato().categoria() != null)
                 .filter(orden -> orden.plato().categoria() != Categoria.Bebida)
+                .filter(this::cuentaNoPagada)
                 .sorted((a, b) -> a.fecha().compareTo(b.fecha()))
                 .toList();
+    }
+
+    private List<Orden> obtenerOrdenesBarraPorEstado(OrdenEstado estado) {
+        return ordenRepository.findAll().stream()
+                .map(this::hidratarOrden)
+                .filter(orden -> orden.ordenEstado() == estado)
+                .filter(orden -> orden.plato() != null)
+                .filter(orden -> orden.plato().categoria() != null)
+                .filter(orden -> orden.plato().categoria() == Categoria.Bebida)
+                .filter(this::cuentaNoPagada)
+                .sorted((a, b) -> {
+                    Instant fechaPedidoA = a.pedido() != null ? a.pedido().fechaPedido() : a.fecha();
+                    Instant fechaPedidoB = b.pedido() != null ? b.pedido().fechaPedido() : b.fecha();
+                    return fechaPedidoA.compareTo(fechaPedidoB);
+                })
+                .toList();
+    }
+
+    private boolean cuentaNoPagada(Orden orden) {
+        if (orden == null || orden.pedido() == null || orden.pedido().cuenta() == null) {
+            return true;
+        }
+        return !orden.pedido().cuenta().payed();
     }
 
     private Orden hidratarOrden(Orden orden) {
@@ -242,7 +281,11 @@ public class OrdenApplicationService {
         }
 
         Pedido pedidoRepositorio = pedidoRepository.findById(pedidoBase.id()).orElse(pedidoBase);
-        Cuenta cuentaBase = pedidoRepositorio.cuenta() != null ? pedidoRepositorio.cuenta() : pedidoBase.cuenta();
+
+        Cuenta cuentaBase = pedidoRepositorio.cuenta() != null
+                ? pedidoRepositorio.cuenta()
+                : pedidoBase.cuenta();
+
         Cuenta cuentaHidratada = hidratarCuenta(cuentaBase);
 
         return new Pedido(
@@ -259,7 +302,7 @@ public class OrdenApplicationService {
         }
 
         boolean tieneMesas = cuentaBase.mesas() != null && !cuentaBase.mesas().isEmpty();
-        if (tieneMesas) {
+        if (tieneMesas && cuentaBase.password() != null) {
             return cuentaBase;
         }
 

@@ -1,56 +1,118 @@
-<div class="bebidas-page">
-  <div class="header-bebidas">
-    <h1>Cola de Bebidas</h1>
-    <div class="contador-pendientes">
-      <span class="dot rojo"></span> {{ pendientesCount() }} Pendientes
+<section class="bebidas-page">
+  <header class="header-bebidas">
+    <div>
+      <p class="eyebrow">Barra / Central</p>
+      <h1>Cola de bebidas</h1>
+      <p class="subtitulo">
+        Se muestran solo bebidas, agrupadas por pedido y ocultando cuentas ya pagadas.
+      </p>
     </div>
-  </div>
 
-  <div class="lista-pedidos">
-    @for (pedido of pedidosOrdenados(); track pedido.id) {
-      <div class="pedido-card" [class.es-listo]="pedido.estado === 'listo'" [class.es-preparando]="pedido.estado === 'preparando'">
+    <div class="contador-pendientes">
+      <span class="dot rojo"></span>
+      <span>{{ pendientesCount() }} pendientes</span>
+    </div>
+  </header>
 
-        <div class="bloque-mesa">
-          <div class="indicador-color"></div>
-          <div class="mesa-texto">
-            <span>MESA</span>
-            <strong>{{ pedido.mesa }}</strong>
+  @if (cargando()) {
+    <div class="estado-vacio">
+      <p>Cargando bebidas...</p>
+    </div>
+  } @else if (error()) {
+    <div class="estado-vacio error">
+      <p>{{ error() }}</p>
+    </div>
+  } @else if (pedidosOrdenados().length === 0) {
+    <div class="estado-vacio">
+      <p>No hay bebidas activas.</p>
+    </div>
+  } @else {
+    <div class="lista-pedidos">
+      @for (pedido of pedidosOrdenados(); track pedido.pedidoId) {
+        <article
+          class="pedido-card"
+          [class.es-listo]="pedido.estado === 'listo'"
+          [class.es-preparando]="pedido.estado === 'preparando'"
+        >
+          <div class="bloque-mesa">
+            <span class="indicador-color"></span>
+
+            <div class="mesa-texto">
+              <span>MESA</span>
+              <strong>{{ pedido.mesaId }}</strong>
+            </div>
           </div>
-        </div>
 
-        <div class="bloque-contenido">
-          <div class="info-superior">
-            <span class="pildora-estado">{{ pedido.estado | titlecase }}</span>
-            <span class="tiempo">{{ pedido.tiempo }}</span>
+          <div class="bloque-contenido">
+            <div class="info-superior">
+              <span class="pildora-estado">
+                {{
+                  pedido.estado === 'pendiente'
+                    ? 'Pendiente'
+                    : pedido.estado === 'preparando'
+                      ? 'En preparación'
+                      : 'Listo'
+                }}
+              </span>
+
+              <span class="dato-secundario">Pedido {{ pedido.pedidoId }}</span>
+              <span class="dato-secundario">{{ pedido.totalItems }} bebidas</span>
+            </div>
+
+            <div class="lista-items">
+              @for (item of pedido.items; track item.nombre) {
+                <div class="item-bebida">
+                  <strong>{{ item.cantidad }}x</strong>
+                  <span>{{ item.nombre }}</span>
+                </div>
+              }
+            </div>
           </div>
-          <div class="lista-items">
-            @for (item of pedido.items; track $index) {
-              <div class="item">
-                <strong>{{ item.cantidad }}</strong> {{ item.nombre }}
+
+          <div class="bloque-accion">
+            @if (pedido.estado === 'pendiente') {
+              <button
+                class="btn-preparar"
+                type="button"
+                [disabled]="procesandoPedidoId() === pedido.pedidoId"
+                (click)="avanzarEstado(pedido)"
+              >
+                PREPARAR
+              </button>
+            } @else if (pedido.estado === 'preparando') {
+              <div class="grupo-botones-preparando">
+                <button
+                  class="btn-deshacer"
+                  type="button"
+                  [disabled]="procesandoPedidoId() === pedido.pedidoId"
+                  (click)="retrocederEstado(pedido)"
+                  title="Volver a pendiente"
+                >
+                  ←
+                </button>
+
+                <button
+                  class="btn-servir"
+                  type="button"
+                  [disabled]="procesandoPedidoId() === pedido.pedidoId"
+                  (click)="avanzarEstado(pedido)"
+                >
+                  LISTO PARA SERVIR
+                </button>
               </div>
+            } @else {
+              <button
+                class="btn-cancelar"
+                type="button"
+                [disabled]="procesandoPedidoId() === pedido.pedidoId"
+                (click)="retrocederEstado(pedido)"
+              >
+                VOLVER
+              </button>
             }
           </div>
-        </div>
-
-        <div class="bloque-accion">
-          @if (pedido.estado === 'pendiente') {
-            <button class="btn-preparar" (click)="avanzarEstado(pedido)">PREPARAR</button>
-          } @else if (pedido.estado === 'preparando') {
-            <div class="grupo-botones-preparando">
-              <button class="btn-deshacer" (click)="retrocederEstado(pedido)">
-                <span class="iconify" data-icon="solar:undo-left-round-bold"></span>
-              </button>
-              <button class="btn-servir" (click)="avanzarEstado(pedido)">LISTO PARA SERVIR</button>
-            </div>
-          } @else {
-            <button class="btn-cancelar" (click)="retrocederEstado(pedido)">
-              CANCELAR
-              <span class="iconify" data-icon="solar:close-circle-bold"></span>
-            </button>
-          }
-        </div>
-
-      </div>
-    }
-  </div>
-</div>
+        </article>
+      }
+    </div>
+  }
+</section>

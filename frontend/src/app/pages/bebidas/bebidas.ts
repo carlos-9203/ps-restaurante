@@ -1,20 +1,37 @@
-import { Component, signal, computed } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { combineLatest, interval, of } from 'rxjs';
+import { catchError, startWith, switchMap } from 'rxjs/operators';
 
-// 1. Añadimos el nuevo estado "preparando"
-export type EstadoPedido = 'pendiente' | 'preparando' | 'listo';
+import {
+  EstadoOrdenBackend,
+  OrdenCocinaResponse,
+  OrdenesApiService,
+} from '../../services/ordenes-api.service';
 
-export interface ItemPedido {
-  cantidad: number;
+type EstadoVisualPedido = 'pendiente' | 'preparando' | 'listo';
+
+interface ItemAgrupadoBebida {
   nombre: string;
+  cantidad: number;
 }
 
-export interface PedidoBebida {
-  id: string;
-  mesa: number;
-  estado: EstadoPedido;
-  tiempo: string;
-  items: ItemPedido[];
+interface PedidoBebidaAgrupado {
+  pedidoId: string;
+  cuentaId: string;
+  mesaId: string;
+  fechaPedido: string;
+  estado: EstadoVisualPedido;
+  ordenesIds: string[];
+  items: ItemAgrupadoBebida[];
+  totalItems: number;
 }
 
 @Component({
@@ -25,121 +42,195 @@ export interface PedidoBebida {
   styleUrl: './bebidas.css',
 })
 export class BebidasComponent {
-  pedidos = signal<PedidoBebida[]>([
-    {
-      id: '1',
-      mesa: 5,
-      estado: 'pendiente',
-      tiempo: '5 min',
-      items: [
-        { cantidad: 2, nombre: 'Cervezas Tropical' },
-        { cantidad: 2, nombre: 'Cliper de Fresa' },
-        { cantidad: 1, nombre: 'Botella de vino Yaiza' },
-      ],
-    },
-    // Ponemos uno en 'preparando' para que veas el nuevo color
-    {
-      id: '2',
-      mesa: 15,
-      estado: 'preparando',
-      tiempo: '5 min',
-      items: [
-        { cantidad: 2, nombre: 'Cervezas Tropical' },
-        { cantidad: 2, nombre: 'Cliper de Fresa' },
-        { cantidad: 1, nombre: 'Botella de vino Yaiza' },
-      ],
-    },
-    {
-      id: '3',
-      mesa: 1,
-      estado: 'pendiente',
-      tiempo: '5 min',
-      items: [
-        { cantidad: 2, nombre: 'Cervezas Tropical' },
-        { cantidad: 2, nombre: 'Cliper de Fresa' },
-        { cantidad: 1, nombre: 'Botella de vino Yaiza' },
-      ],
-    },
-    {
-      id: '4',
-      mesa: 9,
-      estado: 'listo',
-      tiempo: '5 min',
-      items: [
-        { cantidad: 2, nombre: 'Cervezas Tropical' },
-        { cantidad: 2, nombre: 'Cliper de Fresa' },
-        { cantidad: 1, nombre: 'Botella de vino Yaiza' },
-      ],
-    },
-    {
-      id: '5',
-      mesa: 20,
-      estado: 'listo',
-      tiempo: '5 min',
-      items: [
-        { cantidad: 2, nombre: 'Cervezas Tropical' },
-        { cantidad: 2, nombre: 'Cliper de Fresa' },
-        { cantidad: 1, nombre: 'Botella de vino Yaiza' },
-      ],
-    },
-    {
-      id: '6',
-      mesa: 12,
-      estado: 'listo',
-      tiempo: '5 min',
-      items: [
-        { cantidad: 2, nombre: 'Cervezas Tropical' },
-        { cantidad: 2, nombre: 'Cliper de Fresa' },
-        { cantidad: 1, nombre: 'Botella de vino Yaiza' },
-      ],
-    },
-  ]);
+  private readonly ordenesApi = inject(OrdenesApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  private audioNotificacion = new Audio('audio/campana.mp3');
+  readonly cargando = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly procesandoPedidoId = signal<string | null>(null);
 
-  recibirNuevoPedido(nuevoPedido: PedidoBebida) {
-    this.reproducirSonido();
-    this.pedidos.update((lista) => [...lista, nuevoPedido]);
-  }
+  readonly pedidos = signal<PedidoBebidaAgrupado[]>([]);
 
-  private reproducirSonido() {
-    this.audioNotificacion.currentTime = 0;
-    this.audioNotificacion.play().catch((error) => {
-      console.warn('El navegador bloqueó el sonido:', error);
+  readonly pedidosOrdenados = computed(() => {
+    const prioridad: Record<EstadoVisualPedido, number> = {
+      pendiente: 0,
+      preparando: 1,
+      listo: 2,
+    };
+
+    return [...this.pedidos()].sort((a, b) => {
+      const porEstado = prioridad[a.estado] - prioridad[b.estado];
+      if (porEstado !== 0) {
+        return porEstado;
+      }
+
+      const fechaA = new Date(a.fechaPedido).getTime();
+      const fechaB = new Date(b.fechaPedido).getTime();
+      return fechaA - fechaB;
     });
-  }
-
-  // 2. Ordenamos por 3 niveles de prioridad
-  pedidosOrdenados = computed(() => {
-    const prioridad = { pendiente: 1, preparando: 2, listo: 3 };
-    return [...this.pedidos()].sort((a, b) => prioridad[a.estado] - prioridad[b.estado]);
   });
 
-  // Solo contamos los que aún no están listos
-  pendientesCount = computed(() => this.pedidos().filter((p) => p.estado !== 'listo').length);
+  readonly pendientesCount = computed(
+    () => this.pedidos().filter((p) => p.estado !== 'listo').length,
+  );
 
-  // 3. Nuevas funciones para el flujo
-  avanzarEstado(pedido: PedidoBebida) {
-    this.pedidos.update((lista) =>
-      lista.map((p) => {
-        if (p.id === pedido.id) {
-          if (p.estado === 'pendiente') return { ...p, estado: 'preparando' };
-          if (p.estado === 'preparando') return { ...p, estado: 'listo' };
-        }
-        return p;
-      }),
-    );
+  constructor() {
+    interval(3000)
+      .pipe(
+        startWith(0),
+        switchMap(() =>
+          combineLatest([
+            this.ordenesApi.obtenerPendientesBarra(),
+            this.ordenesApi.obtenerEnPreparacionBarra(),
+            this.ordenesApi.obtenerListasBarra(),
+          ]).pipe(
+            catchError((error) => {
+              console.error(error);
+              this.error.set('No se pudieron cargar las bebidas.');
+              this.cargando.set(false);
+              return of([
+                [] as OrdenCocinaResponse[],
+                [] as OrdenCocinaResponse[],
+                [] as OrdenCocinaResponse[],
+              ]);
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(([pendientes, enPreparacion, listas]) => {
+        const todas = [...pendientes, ...enPreparacion, ...listas];
+
+        this.pedidos.set(this.agruparPorPedido(todas));
+        this.cargando.set(false);
+        this.error.set(null);
+      });
   }
 
-  retrocederEstado(pedido: PedidoBebida) {
-    this.pedidos.update(lista => lista.map(p => {
-      if (p.id === pedido.id) {
-        // Si está listo, vuelve a preparando
-        if (p.estado === 'listo') return { ...p, estado: 'preparando' };
-        // Si se está preparando, vuelve a la cola de pendientes
-        if (p.estado === 'preparando') return { ...p, estado: 'pendiente' };
+  avanzarEstado(pedido: PedidoBebidaAgrupado): void {
+    if (!pedido.ordenesIds.length) {
+      return;
+    }
+
+    this.procesandoPedidoId.set(pedido.pedidoId);
+
+    const accion =
+      pedido.estado === 'pendiente'
+        ? this.ordenesApi.marcarEnPreparacion.bind(this.ordenesApi)
+        : this.ordenesApi.marcarLista.bind(this.ordenesApi);
+
+    this.actualizarTodasLasOrdenes(pedido.ordenesIds, accion);
+  }
+
+  retrocederEstado(pedido: PedidoBebidaAgrupado): void {
+    if (!pedido.ordenesIds.length) {
+      return;
+    }
+
+    this.procesandoPedidoId.set(pedido.pedidoId);
+
+    const accion =
+      pedido.estado === 'listo'
+        ? this.ordenesApi.marcarEnPreparacion.bind(this.ordenesApi)
+        : this.ordenesApi.marcarPendiente.bind(this.ordenesApi);
+
+    this.actualizarTodasLasOrdenes(pedido.ordenesIds, accion);
+  }
+
+  private actualizarTodasLasOrdenes(
+    ordenesIds: string[],
+    accion: (ordenId: string) => ReturnType<OrdenesApiService['marcarLista']>,
+  ): void {
+    combineLatest(ordenesIds.map((id) => accion(id)))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.procesandoPedidoId.set(null);
+        },
+        error: (error) => {
+          console.error(error);
+          this.error.set('No se pudo actualizar el estado del pedido de bebidas.');
+          this.procesandoPedidoId.set(null);
+        },
+      });
+  }
+
+  private agruparPorPedido(ordenes: OrdenCocinaResponse[]): PedidoBebidaAgrupado[] {
+    const visibles = ordenes.filter((orden) => {
+      const esBebida = orden.plato?.categoria === 'Bebida';
+      const cuentaPagada = orden.pedido?.cuenta?.payed === true;
+      return esBebida && !cuentaPagada;
+    });
+
+    const mapa = new Map<string, PedidoBebidaAgrupado>();
+
+    for (const orden of visibles) {
+      const pedidoId = orden.pedido?.id;
+      if (!pedidoId) {
+        continue;
       }
-      return p;
+
+      const cuentaId = orden.pedido?.cuenta?.id ?? '';
+      const mesaId =
+        orden.pedido?.cuenta?.mesas?.[0]?.id?.toString?.() ??
+        orden.pedido?.cuenta?.mesas?.[0]?.id ??
+        'Sin asignar';
+
+      const estado = this.mapearEstado(orden.ordenEstado);
+
+      if (!mapa.has(pedidoId)) {
+        mapa.set(pedidoId, {
+          pedidoId,
+          cuentaId,
+          mesaId: String(mesaId),
+          fechaPedido: orden.pedido?.fechaPedido ?? orden.fecha,
+          estado,
+          ordenesIds: [],
+          items: [],
+          totalItems: 0,
+        });
+      }
+
+      const grupo = mapa.get(pedidoId)!;
+      grupo.ordenesIds.push(orden.id);
+      grupo.totalItems += 1;
+
+      if (estado === 'pendiente') {
+        grupo.estado = 'pendiente';
+      } else if (estado === 'preparando' && grupo.estado !== 'pendiente') {
+        grupo.estado = 'preparando';
+      }
+
+      const itemExistente = grupo.items.find(
+        (item) => item.nombre === orden.plato.nombre,
+      );
+
+      if (itemExistente) {
+        itemExistente.cantidad += 1;
+      } else {
+        grupo.items.push({
+          nombre: orden.plato.nombre,
+          cantidad: 1,
+        });
+      }
+    }
+
+    return Array.from(mapa.values()).map((pedido) => ({
+      ...pedido,
+      items: [...pedido.items].sort((a, b) => a.nombre.localeCompare(b.nombre)),
     }));
+  }
+
+  private mapearEstado(estado: EstadoOrdenBackend): EstadoVisualPedido {
+    switch (estado) {
+      case 'Pendiente':
+        return 'pendiente';
+      case 'Preparación':
+        return 'preparando';
+      case 'Listo':
+        return 'listo';
+      default:
+        return 'pendiente';
+    }
   }
 }

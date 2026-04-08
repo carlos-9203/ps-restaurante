@@ -14,7 +14,6 @@ import java.util.Optional;
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class OrdenController {
-
     private final OrdenService service;
     private final OrdenApplicationService applicationService;
     private final NotificacionApplicationService notificacionApplicationService;
@@ -40,30 +39,20 @@ public class OrdenController {
 
                 get(ctx -> ctx.json(service.findAll()));
 
-                path("pendientes", () -> {
-                    get(ctx -> ctx.json(applicationService.obtenerOrdenesPendientes()));
-                });
-
-                path("en-preparacion", () -> {
-                    get(ctx -> ctx.json(applicationService.obtenerOrdenesEnPreparacion()));
-                });
-
-                path("listas", () -> {
-                    get(ctx -> ctx.json(applicationService.obtenerOrdenesListas()));
-                });
+                path("pendientes", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesPendientes())));
+                path("en-preparacion", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesEnPreparacion())));
+                path("listas", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesListas())));
 
                 path("cocina", () -> {
-                    path("pendientes", () -> {
-                        get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaPendientes()));
-                    });
+                    path("pendientes", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaPendientes())));
+                    path("en-preparacion", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaEnPreparacion())));
+                    path("listas", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaListas())));
+                });
 
-                    path("en-preparacion", () -> {
-                        get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaEnPreparacion()));
-                    });
-
-                    path("listas", () -> {
-                        get(ctx -> ctx.json(applicationService.obtenerOrdenesCocinaListas()));
-                    });
+                path("barra", () -> {
+                    path("pendientes", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesBarraPendientes())));
+                    path("en-preparacion", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesBarraEnPreparacion())));
+                    path("listas", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesBarraListas())));
                 });
 
                 path("pedido/{pedidoId}", () -> {

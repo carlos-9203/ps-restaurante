@@ -1,212 +1,297 @@
-/* Contenedor principal */
 .bebidas-page {
-  padding: 2.5rem 4rem;
-  max-width: 1200px;
+  padding: 2rem 2.5rem;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
-/* --- CABECERA --- */
 .header-bebidas {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2.5rem;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #8a6a45;
 }
 
 .header-bebidas h1 {
+  margin: 0;
   font-size: 2rem;
   font-weight: 800;
-  color: #1a1a1a;
-  margin: 0;
+  color: #1f1f1f;
+}
+
+.subtitulo {
+  margin: 0.35rem 0 0;
+  color: #5a5148;
+  font-size: 0.95rem;
 }
 
 .contador-pendientes {
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid #c5b6a7;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid #cfbea8;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.65rem;
   color: #333;
+  white-space: nowrap;
 }
 
-.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-.dot.rojo { background: #b31c1c; }
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
 
-/* --- LISTA Y TARJETAS --- */
+.dot.rojo {
+  background: #b31c1c;
+}
+
 .lista-pedidos {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1rem;
 }
 
 .pedido-card {
   display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid #d4c5b3;
-  border-radius: 16px;
-  padding: 1.2rem;
-  gap: 2rem;
-  transition: all 0.3s ease;
+  align-items: stretch;
+  gap: 1.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: 18px;
+  border: 2px solid #d8c8b4;
+  background: rgba(255, 255, 255, 0.34);
+  transition: transform 0.15s ease, opacity 0.2s ease, border-color 0.2s ease;
 }
 
-/* El truco visual de Figma: los elementos listos se atenúan */
 .pedido-card.es-listo {
-  opacity: 0.4;
-  background: rgba(255, 255, 255, 0.1);
+  opacity: 0.5;
 }
 
-/* --- BLOQUE: MESA --- */
+.pedido-card.es-preparando {
+  border-color: #b99cff;
+  background: rgba(255, 255, 255, 0.58);
+}
+
 .bloque-mesa {
   position: relative;
-  background: #e8dcc8; /* Fondo igual al de la página */
-  border: 1px solid #c5b6a7;
-  border-radius: 12px;
-  padding: 12px 24px;
-  min-width: 100px;
+  min-width: 106px;
+  border-radius: 14px;
+  border: 1px solid #cdbca7;
+  background: #eadfce;
   display: flex;
+  align-items: center;
   justify-content: center;
   overflow: hidden;
+  padding: 0.85rem 1rem;
 }
 
-/* La línea de color incrustada en el recuadro de la mesa */
 .indicador-color {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 6px;
+  width: 7px;
   background: #b31c1c;
 }
-.pedido-card.es-listo .indicador-color { background: #15cc15; }
+
+.pedido-card.es-preparando .indicador-color {
+  background: #7b3ff2;
+}
+
+.pedido-card.es-listo .indicador-color {
+  background: #18a04b;
+}
 
 .mesa-texto {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.mesa-texto span { font-size: 0.75rem; font-weight: 800; color: #1a1a1a; letter-spacing: 0.5px; }
-.mesa-texto strong { font-size: 1.6rem; color: #1a1a1a; margin-top: -2px; }
 
-/* --- BLOQUE: CONTENIDO --- */
+.mesa-texto span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #1b1b1b;
+}
+
+.mesa-texto strong {
+  font-size: 1.7rem;
+  line-height: 1;
+  color: #1b1b1b;
+  margin-top: 0.15rem;
+}
+
 .bloque-contenido {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
+  justify-content: center;
 }
 
 .info-superior {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .pildora-estado {
-  background: #a52a2a;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   color: white;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  background: #a52a2a;
 }
-.pedido-card.es-listo .pildora-estado { background: #90ee90; color: #1a5e1a; }
 
-.tiempo { font-size: 0.75rem; color: #444; font-weight: 500; }
+.pedido-card.es-preparando .pildora-estado {
+  background: #7b3ff2;
+}
+
+.pedido-card.es-listo .pildora-estado {
+  background: #9be3b2;
+  color: #135d2f;
+}
+
+.dato-secundario {
+  font-size: 0.82rem;
+  color: #5b5248;
+  font-weight: 600;
+}
 
 .lista-items {
   display: flex;
-  gap: 2.5rem;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+}
+
+.item-bebida {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid #dccdb9;
+  border-radius: 999px;
+  padding: 0.5rem 0.75rem;
+  color: #1f1f1f;
+}
+
+.item-bebida strong {
   font-size: 0.95rem;
-  color: #1a1a1a;
 }
-.lista-items strong { font-size: 1.1rem; margin-right: 4px; }
 
-/* --- BLOQUE: BOTONES TPV --- */
-.bloque-accion { margin-left: auto; }
+.item-bebida span {
+  font-size: 0.93rem;
+}
 
-.btn-servir, .btn-cancelar {
-  padding: 16px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 800;
-  font-size: 1rem;
-  color: white;
-  cursor: pointer;
+.bloque-accion {
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: transform 0.1s;
+  margin-left: auto;
 }
 
-.btn-servir { background: #11c011; }
-.btn-cancelar { background: #b31c1c; }
-
-/* Efecto táctil TPV */
-.btn-servir:active, .btn-cancelar:active { transform: scale(0.96); }
-.btn-cancelar .iconify { font-size: 1.2rem; }
-
-/* --- NUEVO ESTADO: PREPARANDO --- */
-.pedido-card.es-preparando {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: #c9a3ff; /* Borde suave morado */
+.btn-preparar,
+.btn-servir,
+.btn-cancelar,
+.btn-deshacer {
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform 0.1s ease, opacity 0.15s ease;
 }
 
-/* Cambiamos el color de la línea y la píldora al morado que pediste */
-.pedido-card.es-preparando .indicador-color { background: #8800FF; }
-.pedido-card.es-preparando .pildora-estado { background: #8800FF; color: white; }
+.btn-preparar,
+.btn-servir,
+.btn-cancelar {
+  padding: 0.95rem 1.2rem;
+  color: white;
+  font-size: 0.95rem;
+}
 
-/* --- NUEVO BOTÓN: PREPARAR --- */
 .btn-preparar {
-  background: #8800FF;
-  padding: 16px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 800;
-  font-size: 1rem;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: transform 0.1s;
+  background: #7b3ff2;
 }
 
-.btn-preparar:active {
+.btn-servir {
+  background: #159d43;
+}
+
+.btn-cancelar {
+  background: #b31c1c;
+}
+
+.btn-deshacer {
+  width: 52px;
+  height: 52px;
+  background: #c8cdd4;
+  color: #334155;
+  font-size: 1.2rem;
+}
+
+.btn-preparar:active,
+.btn-servir:active,
+.btn-cancelar:active,
+.btn-deshacer:active {
   transform: scale(0.96);
 }
 
-/* --- GRUPO DE BOTONES (ESTADO INTERMEDIO) --- */
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .grupo-botones-preparando {
   display: flex;
-  gap: 12px;
   align-items: center;
+  gap: 0.75rem;
 }
 
-/* Botón de volver atrás (Discreto pero accesible) */
-.btn-deshacer {
-  background: #b2b6bc; /* Gris suave */
-  color: #4a5568;      /* Icono oscuro */
-  border: none;
-  border-radius: 8px;
-  padding: 16px;       /* Mismo alto que el resto de botones para no fallar el toque */
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.1s;
+.estado-vacio {
+  border: 2px dashed #d7c6b0;
+  border-radius: 18px;
+  padding: 2rem;
+  text-align: center;
+  color: #5f564c;
+  background: rgba(255, 255, 255, 0.25);
 }
 
-.btn-deshacer:active {
-  transform: scale(0.92);
-  background: #cbd5e0;
+.estado-vacio.error {
+  border-color: #dca9a9;
+  color: #8a1f1f;
 }
 
-.btn-deshacer .iconify {
-  font-size: 1.5rem;
+@media (max-width: 900px) {
+  .bebidas-page {
+    padding: 1.25rem;
+  }
+
+  .header-bebidas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pedido-card {
+    flex-direction: column;
+  }
+
+  .bloque-accion {
+    margin-left: 0;
+  }
 }

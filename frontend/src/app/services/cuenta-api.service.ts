@@ -49,7 +49,7 @@ export interface EstadoCuentaResponse {
 })
 export class CuentaApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:7070';
+  private readonly apiUrl = `http://${window.location.hostname}:7070`;
 
   obtenerCuentaActivaDeMesa(mesaId: string): Observable<CuentaActivaResponse | null> {
     return this.http
