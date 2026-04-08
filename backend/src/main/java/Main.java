@@ -25,19 +25,19 @@ import service.CuentaService;
 import service.MesaApplicationService;
 import service.MesaService;
 import service.NotificacionService;
-import service.application.OrdenApplicationService;
 import service.OrdenService;
 import service.PedidoService;
 import service.PlatoService;
 import service.ReservaService;
 import service.application.NotificacionApplicationService;
+import service.application.OrdenApplicationService;
 import service.application.PagoApplicationService;
 import service.application.PedidoApplicationService;
 import util.ApiError;
 import util.MesaSeeder;
+import util.PlatoSeeder;
 
 public class Main {
-
     public static void main(String[] args) {
         FirebaseConfig.init();
         Firestore db = FirestoreClientProvider.getFirestore();
@@ -55,7 +55,8 @@ public class Main {
         FirestoreOrdenRepository ordenRepository = new FirestoreOrdenRepository(db);
         FirestoreNotificacionRepository notificacionRepository = new FirestoreNotificacionRepository(db);
 
-        MesaSeeder.seed(mesaRepository);
+        //MesaSeeder.seed(mesaRepository);
+        //PlatoSeeder.seed(platoRepository);
 
         PlatoService platoService = new PlatoService(platoRepository);
         MesaService mesaService = new MesaService(mesaRepository);
