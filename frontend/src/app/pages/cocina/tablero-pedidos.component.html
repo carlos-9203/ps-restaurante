@@ -1,18 +1,22 @@
 <div class="kitchen-page">
   <main class="kitchen-main">
     <section class="kitchen-hero">
-      <div>
+      <div class="kitchen-hero__content">
         <p class="kitchen-hero__eyebrow">Cocina</p>
         <h1 class="kitchen-hero__title">Tablero de órdenes</h1>
         <p class="kitchen-hero__subtitle">
-          Aquí se muestran automáticamente las órdenes de comida que envían los clientes.
+          Vista compacta para cocina. Solo se muestra lo importante para preparar y servir.
         </p>
       </div>
 
-      <div class="kitchen-hero__stats">
+      <div class="kitchen-hero__actions">
         <span class="hero-badge">
-          {{ totalOrdenes() }} {{ totalOrdenes() === 1 ? 'orden' : 'órdenes' }}
+          {{ totalOrdenes() }} {{ totalOrdenes() === 1 ? 'orden activa' : 'órdenes activas' }}
         </span>
+
+        <button class="refresh-btn" type="button" (click)="recargar()">
+          Actualizar
+        </button>
       </div>
     </section>
 
@@ -24,58 +28,120 @@
     } @else if (error()) {
       <section class="state-card">
         <p class="state-card__error">{{ error() }}</p>
-        <button type="button" class="retry-btn" (click)="recargar()">
-          Reintentar
-        </button>
+        <button class="retry-btn" type="button" (click)="recargar()">Reintentar</button>
       </section>
     } @else {
       <section class="board">
+        <!-- Pendientes -->
         <article class="column">
-          <div class="column__header column__header--pending">
-            <div>
-              <p class="column__eyebrow">Pendiente</p>
-              <h2>{{ ordenesPendientes().length }}</h2>
+          <header class="column__header column__header--pending">
+            <p class="column__eyebrow">Cola de entrada</p>
+            <div class="column__title-row">
+              <h2>Pendiente</h2>
+              <span class="column__count">{{ ordenesPendientes().length }}</span>
             </div>
-          </div>
+          </header>
 
           <div class="column__content">
             @if (ordenesPendientes().length === 0) {
               <div class="empty-card">No hay órdenes pendientes.</div>
             } @else {
               @for (orden of ordenesPendientes(); track orden.id) {
-                <article class="order-card">
+                <article class="order-card order-card--compact">
                   <div class="order-card__body">
                     <div class="order-card__top">
-                      <span class="order-card__mesa order-card__mesa--big">
-                        {{ mesaDeOrden(orden) }}
-                      </span>
+                      <div class="order-card__top-left">
+                        <div class="order-card__mesa-block">
+                          <span class="order-card__mesa-label">Mesa</span>
+                          <span class="order-card__mesa order-card__mesa--big">
+                            {{ numeroMesaPlano(orden) }}
+                          </span>
+                        </div>
 
-                      <span class="order-card__time">
-                        {{ tiempoTranscurrido(orden.fecha) }}
+                        <span class="order-card__category-badge">
+                          {{ categoriaCorta(orden.plato.categoria) }}
+                        </span>
+                      </div>
+
+                      <span class="{{ etaClase(orden) }}">
+                        {{ etaTexto(orden) }}
                       </span>
                     </div>
 
                     <div class="order-card__main">
-                      <p class="order-card__category">{{ orden.plato.categoria }}</p>
                       <h3 class="order-card__title">{{ orden.plato.nombre }}</h3>
+                      <p class="order-card__mesa-inline">{{ mesaDeOrden(orden) }}</p>
+                      <p class="order-card__time">{{ tiempoTextoTarjeta(orden) }}</p>
+
+                      @if (orden.detalles) {
+                        <p class="order-card__note">{{ orden.detalles }}</p>
+                      }
                     </div>
 
-                    @if (orden.detalles) {
-                      <p class="order-card__note">
-                        <strong>Detalles:</strong> {{ orden.detalles }}
-                      </p>
-                    }
-
-                    <div class="order-card__footer">
+                    <div class="order-card__footer order-card__footer--pending">
                       <button
+                        class="action-btn action-btn--ghost"
                         type="button"
+                        (click)="toggleDetalle(orden.id)"
+                      >
+                        {{ detalleAbierto(orden.id) ? 'Ocultar detalle' : 'Detalle' }}
+                      </button>
+
+                      <button
                         class="action-btn action-btn--primary"
-                        (click)="pasarAPreparacion(orden.id)"
+                        type="button"
                         [disabled]="actualizando()"
+                        (click)="pasarAPreparacion(orden.id)"
                       >
                         Empezar
                       </button>
                     </div>
+
+                    @if (detalleAbierto(orden.id)) {
+                      <div class="detail-panel">
+                        <div class="detail-grid">
+                          <div class="detail-item">
+                            <span class="detail-label">Mesa resuelta</span>
+                            <span class="detail-value">{{ mesaDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Origen mesa</span>
+                            <span class="detail-value">{{ origenMesa(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID orden</span>
+                            <span class="detail-value">{{ orden.id }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID pedido</span>
+                            <span class="detail-value">{{ pedidoIdDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID cuenta</span>
+                            <span class="detail-value">{{ cuentaIdDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Fecha orden</span>
+                            <span class="detail-value">{{ fechaLarga(orden.fecha) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Fecha pedido</span>
+                            <span class="detail-value">{{ fechaLarga(orden.pedido?.fechaPedido) }}</span>
+                          </div>
+
+                          <div class="detail-item detail-item--full">
+                            <span class="detail-label">Detalles técnicos</span>
+                            <span class="detail-value">{{ detalleTecnico(orden) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
                   </div>
                 </article>
               }
@@ -83,61 +149,127 @@
           </div>
         </article>
 
+        <!-- En preparación -->
         <article class="column">
-          <div class="column__header column__header--progress">
-            <div>
-              <p class="column__eyebrow">En preparación</p>
-              <h2>{{ ordenesPreparacion().length }}</h2>
+          <header class="column__header column__header--progress">
+            <p class="column__eyebrow">En cocina</p>
+            <div class="column__title-row">
+              <h2>En preparación</h2>
+              <span class="column__count">{{ ordenesPreparacion().length }}</span>
             </div>
-          </div>
+          </header>
 
           <div class="column__content">
             @if (ordenesPreparacion().length === 0) {
               <div class="empty-card">No hay órdenes en preparación.</div>
             } @else {
               @for (orden of ordenesPreparacion(); track orden.id) {
-                <article class="order-card">
+                <article class="order-card order-card--compact">
                   <div class="order-card__body">
                     <div class="order-card__top">
-                      <span class="order-card__mesa order-card__mesa--big">
-                        {{ mesaDeOrden(orden) }}
-                      </span>
+                      <div class="order-card__top-left">
+                        <div class="order-card__mesa-block">
+                          <span class="order-card__mesa-label">Mesa</span>
+                          <span class="order-card__mesa order-card__mesa--big">
+                            {{ numeroMesaPlano(orden) }}
+                          </span>
+                        </div>
 
-                      <span class="order-card__time">
-                        {{ tiempoTranscurrido(orden.fecha) }}
+                        <span class="order-card__category-badge">
+                          {{ categoriaCorta(orden.plato.categoria) }}
+                        </span>
+                      </div>
+
+                      <span class="{{ etaClase(orden) }}">
+                        {{ etaTexto(orden) }}
                       </span>
                     </div>
 
                     <div class="order-card__main">
-                      <p class="order-card__category">{{ orden.plato.categoria }}</p>
                       <h3 class="order-card__title">{{ orden.plato.nombre }}</h3>
-                    </div>
+                      <p class="order-card__mesa-inline">{{ mesaDeOrden(orden) }}</p>
+                      <p class="order-card__time">{{ tiempoTextoTarjeta(orden) }}</p>
 
-                    @if (orden.detalles) {
-                      <p class="order-card__note">
-                        <strong>Detalles:</strong> {{ orden.detalles }}
-                      </p>
-                    }
+                      @if (orden.detalles) {
+                        <p class="order-card__note">{{ orden.detalles }}</p>
+                      }
+                    </div>
 
                     <div class="order-card__footer order-card__footer--two">
                       <button
-                        type="button"
                         class="action-btn action-btn--secondary"
-                        (click)="pasarAPendiente(orden.id)"
+                        type="button"
                         [disabled]="actualizando()"
+                        (click)="pasarAPendiente(orden.id)"
                       >
                         Volver
                       </button>
 
                       <button
-                        type="button"
                         class="action-btn action-btn--success"
-                        (click)="pasarALista(orden.id)"
+                        type="button"
                         [disabled]="actualizando()"
+                        (click)="pasarALista(orden.id)"
                       >
                         Marcar lista
                       </button>
                     </div>
+
+                    <div class="order-card__footer order-card__footer--detail-only">
+                      <button
+                        class="action-btn action-btn--ghost"
+                        type="button"
+                        (click)="toggleDetalle(orden.id)"
+                      >
+                        {{ detalleAbierto(orden.id) ? 'Ocultar detalle' : 'Detalle' }}
+                      </button>
+                    </div>
+
+                    @if (detalleAbierto(orden.id)) {
+                      <div class="detail-panel">
+                        <div class="detail-grid">
+                          <div class="detail-item">
+                            <span class="detail-label">Mesa resuelta</span>
+                            <span class="detail-value">{{ mesaDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Origen mesa</span>
+                            <span class="detail-value">{{ origenMesa(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID orden</span>
+                            <span class="detail-value">{{ orden.id }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID pedido</span>
+                            <span class="detail-value">{{ pedidoIdDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID cuenta</span>
+                            <span class="detail-value">{{ cuentaIdDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Fecha orden</span>
+                            <span class="detail-value">{{ fechaLarga(orden.fecha) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Fecha pedido</span>
+                            <span class="detail-value">{{ fechaLarga(orden.pedido?.fechaPedido) }}</span>
+                          </div>
+
+                          <div class="detail-item detail-item--full">
+                            <span class="detail-label">Detalles técnicos</span>
+                            <span class="detail-value">{{ detalleTecnico(orden) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
                   </div>
                 </article>
               }
@@ -145,52 +277,116 @@
           </div>
         </article>
 
+        <!-- Listas -->
         <article class="column">
-          <div class="column__header column__header--ready">
-            <div>
-              <p class="column__eyebrow">Listo</p>
-              <h2>{{ ordenesListas().length }}</h2>
+          <header class="column__header column__header--ready">
+            <p class="column__eyebrow">Salida</p>
+            <div class="column__title-row">
+              <h2>Listo</h2>
+              <span class="column__count">{{ ordenesListas().length }}</span>
             </div>
-          </div>
+          </header>
 
           <div class="column__content">
             @if (ordenesListas().length === 0) {
               <div class="empty-card">No hay órdenes listas.</div>
             } @else {
               @for (orden of ordenesListas(); track orden.id) {
-                <article class="order-card">
+                <article class="order-card order-card--compact order-card--ready">
                   <div class="order-card__body">
                     <div class="order-card__top">
-                      <span class="order-card__mesa order-card__mesa--big">
-                        {{ mesaDeOrden(orden) }}
-                      </span>
+                      <div class="order-card__top-left">
+                        <div class="order-card__mesa-block">
+                          <span class="order-card__mesa-label">Mesa</span>
+                          <span class="order-card__mesa order-card__mesa--big">
+                            {{ numeroMesaPlano(orden) }}
+                          </span>
+                        </div>
 
-                      <span class="order-card__time">
-                        {{ tiempoTranscurrido(orden.fecha) }}
+                        <span class="order-card__category-badge">
+                          {{ categoriaCorta(orden.plato.categoria) }}
+                        </span>
+                      </div>
+
+                      <span class="{{ etaClase(orden) }}">
+                        {{ etaTexto(orden) }}
                       </span>
                     </div>
 
                     <div class="order-card__main">
-                      <p class="order-card__category">{{ orden.plato.categoria }}</p>
                       <h3 class="order-card__title">{{ orden.plato.nombre }}</h3>
+                      <p class="order-card__mesa-inline">{{ mesaDeOrden(orden) }}</p>
+                      <p class="order-card__time">{{ tiempoTextoTarjeta(orden) }}</p>
+
+                      @if (orden.detalles) {
+                        <p class="order-card__note">{{ orden.detalles }}</p>
+                      }
                     </div>
 
-                    @if (orden.detalles) {
-                      <p class="order-card__note">
-                        <strong>Detalles:</strong> {{ orden.detalles }}
-                      </p>
-                    }
-
-                    <div class="order-card__footer">
+                    <div class="order-card__footer order-card__footer--two">
                       <button
-                        type="button"
                         class="action-btn action-btn--secondary"
-                        (click)="pasarAPreparacion(orden.id)"
+                        type="button"
                         [disabled]="actualizando()"
+                        (click)="pasarAPendiente(orden.id)"
                       >
                         Reabrir
                       </button>
+
+                      <button
+                        class="action-btn action-btn--ghost"
+                        type="button"
+                        (click)="toggleDetalle(orden.id)"
+                      >
+                        {{ detalleAbierto(orden.id) ? 'Ocultar detalle' : 'Detalle' }}
+                      </button>
                     </div>
+
+                    @if (detalleAbierto(orden.id)) {
+                      <div class="detail-panel">
+                        <div class="detail-grid">
+                          <div class="detail-item">
+                            <span class="detail-label">Mesa resuelta</span>
+                            <span class="detail-value">{{ mesaDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Origen mesa</span>
+                            <span class="detail-value">{{ origenMesa(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID orden</span>
+                            <span class="detail-value">{{ orden.id }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID pedido</span>
+                            <span class="detail-value">{{ pedidoIdDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">ID cuenta</span>
+                            <span class="detail-value">{{ cuentaIdDeOrden(orden) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Fecha orden</span>
+                            <span class="detail-value">{{ fechaLarga(orden.fecha) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                            <span class="detail-label">Fecha pedido</span>
+                            <span class="detail-value">{{ fechaLarga(orden.pedido?.fechaPedido) }}</span>
+                          </div>
+
+                          <div class="detail-item detail-item--full">
+                            <span class="detail-label">Detalles técnicos</span>
+                            <span class="detail-value">{{ detalleTecnico(orden) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
                   </div>
                 </article>
               }

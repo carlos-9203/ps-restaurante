@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { forkJoin, take } from 'rxjs';
 import {
+  CategoriaPlatoBackend,
   OrdenCocinaResponse,
   OrdenesApiService,
 } from '../../services/ordenes-api.service';
@@ -15,7 +16,9 @@ import {
 })
 export class TableroPedidos implements OnInit, OnDestroy {
   private readonly ordenesApiService = inject(OrdenesApiService);
+
   private intervaloRefresco?: number;
+  private intervaloReloj?: number;
 
   readonly cargando = signal(true);
   readonly actualizando = signal(false);
@@ -24,6 +27,9 @@ export class TableroPedidos implements OnInit, OnDestroy {
   readonly ordenesPendientes = signal<OrdenCocinaResponse[]>([]);
   readonly ordenesPreparacion = signal<OrdenCocinaResponse[]>([]);
   readonly ordenesListas = signal<OrdenCocinaResponse[]>([]);
+
+  readonly ahora = signal(Date.now());
+  readonly ordenDetalleAbiertaId = signal<string | null>(null);
 
   readonly totalOrdenes = computed(
     () =>
@@ -38,11 +44,19 @@ export class TableroPedidos implements OnInit, OnDestroy {
     this.intervaloRefresco = window.setInterval(() => {
       this.cargarTablero(false);
     }, 4000);
+
+    this.intervaloReloj = window.setInterval(() => {
+      this.ahora.set(Date.now());
+    }, 30000);
   }
 
   ngOnDestroy(): void {
     if (this.intervaloRefresco) {
       window.clearInterval(this.intervaloRefresco);
+    }
+
+    if (this.intervaloReloj) {
+      window.clearInterval(this.intervaloReloj);
     }
   }
 
@@ -50,10 +64,21 @@ export class TableroPedidos implements OnInit, OnDestroy {
     this.cargarTablero(true);
   }
 
-  pasarAPreparacion(ordenId: string): void {
-    if (this.actualizando()) {
+  toggleDetalle(ordenId: string): void {
+    if (this.ordenDetalleAbiertaId() === ordenId) {
+      this.ordenDetalleAbiertaId.set(null);
       return;
     }
+
+    this.ordenDetalleAbiertaId.set(ordenId);
+  }
+
+  detalleAbierto(ordenId: string): boolean {
+    return this.ordenDetalleAbiertaId() === ordenId;
+  }
+
+  pasarAPreparacion(ordenId: string): void {
+    if (this.actualizando()) return;
 
     this.actualizando.set(true);
 
@@ -73,9 +98,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
   }
 
   pasarAPendiente(ordenId: string): void {
-    if (this.actualizando()) {
-      return;
-    }
+    if (this.actualizando()) return;
 
     this.actualizando.set(true);
 
@@ -95,9 +118,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
   }
 
   pasarALista(ordenId: string): void {
-    if (this.actualizando()) {
-      return;
-    }
+    if (this.actualizando()) return;
 
     this.actualizando.set(true);
 
@@ -116,50 +137,215 @@ export class TableroPedidos implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Texto principal visible para cocina.
+   */
   mesaDeOrden(orden: OrdenCocinaResponse): string {
     const mesas = orden.pedido?.cuenta?.mesas ?? [];
 
-    if (mesas.length === 0) {
-      return 'Mesa ?';
+    if (mesas.length > 0) {
+      if (mesas.length === 1) {
+        return `Mesa ${mesas[0].id}`;
+      }
+
+      return `Mesas ${mesas.map((mesa) => mesa.id).join(', ')}`;
     }
 
-    if (mesas.length === 1) {
-      return `Mesa ${mesas[0].id}`;
+    const mesaDesdeDetalles = this.extraerMesaDesdeTexto(orden.detalles);
+    if (mesaDesdeDetalles) {
+      return `Mesa ${mesaDesdeDetalles}`;
     }
 
-    return `Mesas ${mesas.map((mesa) => mesa.id).join(', ')}`;
+    return 'Mesa sin asignar';
+  }
+
+  /**
+   * Indica de dónde sale la mesa, útil para el panel de detalle.
+   */
+  origenMesa(orden: OrdenCocinaResponse): string {
+    const mesas = orden.pedido?.cuenta?.mesas ?? [];
+
+    if (mesas.length > 0) {
+      return 'pedido.cuenta.mesas';
+    }
+
+    const mesaDesdeDetalles = this.extraerMesaDesdeTexto(orden.detalles);
+    if (mesaDesdeDetalles) {
+      return 'detalles';
+    }
+
+    return 'no enviada por la API';
+  }
+
+  numeroMesaPlano(orden: OrdenCocinaResponse): string {
+    const mesas = orden.pedido?.cuenta?.mesas ?? [];
+
+    if (mesas.length > 0) {
+      return mesas.map((mesa) => mesa.id).join(', ');
+    }
+
+    const mesaDesdeDetalles = this.extraerMesaDesdeTexto(orden.detalles);
+    if (mesaDesdeDetalles) {
+      return mesaDesdeDetalles;
+    }
+
+    return 'Sin mesa';
+  }
+
+  cuentaIdDeOrden(orden: OrdenCocinaResponse): string {
+    return orden.pedido?.cuenta?.id ?? 'Sin cuenta';
+  }
+
+  pedidoIdDeOrden(orden: OrdenCocinaResponse): string {
+    return orden.pedido?.id ?? 'Sin pedido';
+  }
+
+  categoriaCorta(categoria: CategoriaPlatoBackend): string {
+    switch (categoria) {
+      case 'Entrante':
+        return 'ENT';
+      case 'Principal':
+        return 'PPL';
+      case 'Postre':
+        return 'POS';
+      case 'Bebida':
+        return 'BEB';
+      default:
+        return categoria;
+    }
   }
 
   tiempoTranscurrido(fechaIso: string): string {
-    const fecha = new Date(fechaIso).getTime();
-    const ahora = Date.now();
-    const minutos = Math.max(0, Math.floor((ahora - fecha) / 60000));
+    const diffMin = this.diferenciaEnMinutos(fechaIso);
 
-    if (minutos < 1) {
-      return 'Hace menos de 1 min';
+    if (diffMin < 1) {
+      return '< 1 min';
     }
 
-    if (minutos === 1) {
-      return 'Hace 1 min';
+    if (diffMin < 60) {
+      return `${diffMin} min`;
     }
 
-    if (minutos < 60) {
-      return `Hace ${minutos} min`;
+    const horas = Math.floor(diffMin / 60);
+    const minutosRestantes = diffMin % 60;
+
+    if (minutosRestantes === 0) {
+      return `${horas} h`;
     }
 
-    const horas = Math.floor(minutos / 60);
-
-    if (horas === 1) {
-      return 'Hace 1 h';
-    }
-
-    return `Hace ${horas} h`;
+    return `${horas} h ${minutosRestantes} min`;
   }
 
-  onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src =
-      'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop';
+  tiempoTextoTarjeta(orden: OrdenCocinaResponse): string {
+    const transcurrido = this.tiempoTranscurrido(orden.fecha);
+
+    switch (orden.ordenEstado) {
+      case 'Pendiente':
+        return `En cola · ${transcurrido}`;
+      case 'Preparación':
+        return `Preparando · ${transcurrido}`;
+      case 'Listo':
+        return `Lista · ${transcurrido}`;
+      default:
+        return transcurrido;
+    }
+  }
+
+  etaTexto(orden: OrdenCocinaResponse): string {
+    const estimado = this.tiempoObjetivoMinutos(orden);
+    const transcurrido = this.diferenciaEnMinutos(orden.fecha);
+
+    if (orden.ordenEstado === 'Listo') {
+      return `Lista desde hace ${this.tiempoTranscurrido(orden.fecha)}`;
+    }
+
+    const restantes = estimado - transcurrido;
+
+    if (restantes > 0) {
+      return `ETA ${restantes} min`;
+    }
+
+    if (restantes === 0) {
+      return 'ETA 0 min';
+    }
+
+    return `Retraso ${Math.abs(restantes)} min`;
+  }
+
+  etaClase(orden: OrdenCocinaResponse): string {
+    const estimado = this.tiempoObjetivoMinutos(orden);
+    const transcurrido = this.diferenciaEnMinutos(orden.fecha);
+    const restantes = estimado - transcurrido;
+
+    if (orden.ordenEstado === 'Listo') {
+      return 'eta eta--ready';
+    }
+
+    if (restantes <= 0) {
+      return 'eta eta--late';
+    }
+
+    if (restantes <= 3) {
+      return 'eta eta--warning';
+    }
+
+    return 'eta eta--ok';
+  }
+
+  fechaLarga(fechaIso?: string | null): string {
+    if (!fechaIso) {
+      return 'Sin fecha';
+    }
+
+    const fecha = new Date(fechaIso);
+
+    if (Number.isNaN(fecha.getTime())) {
+      return fechaIso;
+    }
+
+    return new Intl.DateTimeFormat('es-ES', {
+      dateStyle: 'short',
+      timeStyle: 'medium',
+    }).format(fecha);
+  }
+
+  detalleTecnico(orden: OrdenCocinaResponse): string {
+    const detalles = orden.detalles?.trim();
+    return detalles && detalles.length > 0 ? detalles : 'Sin detalles';
+  }
+
+  private diferenciaEnMinutos(fechaIso: string): number {
+    const fecha = new Date(fechaIso).getTime();
+
+    if (Number.isNaN(fecha)) {
+      return 0;
+    }
+
+    return Math.max(0, Math.floor((this.ahora() - fecha) / 60000));
+  }
+
+  private tiempoObjetivoMinutos(orden: OrdenCocinaResponse): number {
+    switch (orden.plato.categoria) {
+      case 'Entrante':
+        return 10;
+      case 'Principal':
+        return 18;
+      case 'Postre':
+        return 8;
+      case 'Bebida':
+        return 4;
+      default:
+        return 12;
+    }
+  }
+
+  private extraerMesaDesdeTexto(texto?: string | null): string | null {
+    if (!texto) {
+      return null;
+    }
+
+    const match = texto.match(/\bmesa\s*[:#-]?\s*(\d+)\b/i);
+    return match?.[1] ?? null;
   }
 
   private cargarTablero(mostrarLoading: boolean): void {
@@ -181,6 +367,17 @@ export class TableroPedidos implements OnInit, OnDestroy {
           this.ordenesPreparacion.set(preparacion);
           this.ordenesListas.set(listas);
           this.cargando.set(false);
+
+          const abierta = this.ordenDetalleAbiertaId();
+          if (abierta) {
+            const sigueExistiendo = [...pendientes, ...preparacion, ...listas].some(
+              (orden) => orden.id === abierta,
+            );
+
+            if (!sigueExistiendo) {
+              this.ordenDetalleAbiertaId.set(null);
+            }
+          }
         },
         error: () => {
           this.error.set('No se ha podido cargar el tablero de cocina.');

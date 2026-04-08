@@ -1,10 +1,13 @@
 package service.application;
 
 import model.Categoria;
+import model.Cuenta;
+import model.Mesa;
 import model.Orden;
 import model.OrdenEstado;
 import model.Pedido;
 import model.Plato;
+import repository.interfaces.CuentaRepository;
 import repository.interfaces.OrdenRepository;
 import repository.interfaces.PedidoRepository;
 import repository.interfaces.PlatoRepository;
@@ -12,13 +15,14 @@ import repository.interfaces.PlatoRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class OrdenApplicationService {
-
     private final OrdenRepository ordenRepository;
     private final PedidoRepository pedidoRepository;
     private final PlatoRepository platoRepository;
     private final PedidoApplicationService pedidoApplicationService;
+    private final CuentaRepository cuentaRepository;
 
     public OrdenApplicationService(
             OrdenRepository ordenRepository,
@@ -26,15 +30,28 @@ public class OrdenApplicationService {
             PlatoRepository platoRepository,
             PedidoApplicationService pedidoApplicationService
     ) {
+        this(ordenRepository, pedidoRepository, platoRepository, pedidoApplicationService, null);
+    }
+
+    public OrdenApplicationService(
+            OrdenRepository ordenRepository,
+            PedidoRepository pedidoRepository,
+            PlatoRepository platoRepository,
+            PedidoApplicationService pedidoApplicationService,
+            CuentaRepository cuentaRepository
+    ) {
         this.ordenRepository = ordenRepository;
         this.pedidoRepository = pedidoRepository;
         this.platoRepository = platoRepository;
         this.pedidoApplicationService = pedidoApplicationService;
+        this.cuentaRepository = cuentaRepository;
     }
 
     public Orden crearOrdenDesdePedidoYPlato(String pedidoId, String platoId, String detalles) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+
+        pedido = hidratarPedido(pedido);
 
         Plato plato = platoRepository.findById(platoId)
                 .orElseThrow(() -> new IllegalArgumentException("El plato no existe"));
@@ -49,7 +66,7 @@ public class OrdenApplicationService {
                 detalles == null ? "" : detalles.trim()
         );
 
-        return ordenRepository.save(orden);
+        return hidratarOrden(ordenRepository.save(orden));
     }
 
     public List<Orden> crearOrdenesDesdePedido(String pedidoId, List<String> platosIds) {
@@ -80,8 +97,10 @@ public class OrdenApplicationService {
     }
 
     public Orden obtenerOrdenPorId(String ordenId) {
-        return ordenRepository.findById(ordenId)
+        Orden orden = ordenRepository.findById(ordenId)
                 .orElseThrow(() -> new IllegalArgumentException("La orden no existe"));
+
+        return hidratarOrden(orden);
     }
 
     public List<Orden> obtenerOrdenesDePedido(String pedidoId) {
@@ -92,24 +111,28 @@ public class OrdenApplicationService {
                 .filter(orden -> orden.pedido() != null)
                 .filter(orden -> orden.pedido().id() != null)
                 .filter(orden -> orden.pedido().id().equals(pedido.id()))
+                .map(this::hidratarOrden)
                 .toList();
     }
 
     public List<Orden> obtenerOrdenesPendientes() {
         return ordenRepository.findAll().stream()
                 .filter(orden -> orden.ordenEstado() == OrdenEstado.Pendiente)
+                .map(this::hidratarOrden)
                 .toList();
     }
 
     public List<Orden> obtenerOrdenesEnPreparacion() {
         return ordenRepository.findAll().stream()
                 .filter(orden -> orden.ordenEstado() == OrdenEstado.Preparación)
+                .map(this::hidratarOrden)
                 .toList();
     }
 
     public List<Orden> obtenerOrdenesListas() {
         return ordenRepository.findAll().stream()
                 .filter(orden -> orden.ordenEstado() == OrdenEstado.Listo)
+                .map(this::hidratarOrden)
                 .toList();
     }
 
@@ -140,7 +163,7 @@ public class OrdenApplicationService {
 
         Orden guardada = ordenRepository.update(orden.id(), actualizada);
         pedidoApplicationService.recalcularEstadoPedido(orden.pedido().id());
-        return guardada;
+        return hidratarOrden(guardada);
     }
 
     public Orden marcarOrdenEnPreparacion(String ordenId) {
@@ -158,7 +181,7 @@ public class OrdenApplicationService {
 
         Orden guardada = ordenRepository.update(orden.id(), actualizada);
         pedidoApplicationService.recalcularEstadoPedido(orden.pedido().id());
-        return guardada;
+        return hidratarOrden(guardada);
     }
 
     public Orden marcarOrdenLista(String ordenId) {
@@ -176,23 +199,75 @@ public class OrdenApplicationService {
 
         Orden guardada = ordenRepository.update(orden.id(), actualizada);
         pedidoApplicationService.recalcularEstadoPedido(orden.pedido().id());
-        return guardada;
+        return hidratarOrden(guardada);
     }
 
     public boolean estanTodasListasLasOrdenes(String pedidoId) {
         List<Orden> ordenes = obtenerOrdenesDePedido(pedidoId);
-
-        return !ordenes.isEmpty()
-                && ordenes.stream().allMatch(orden -> orden.ordenEstado() == OrdenEstado.Listo);
+        return !ordenes.isEmpty() && ordenes.stream().allMatch(orden -> orden.ordenEstado() == OrdenEstado.Listo);
     }
 
     private List<Orden> obtenerOrdenesCocinaPorEstado(OrdenEstado estado) {
         return ordenRepository.findAll().stream()
+                .map(this::hidratarOrden)
                 .filter(orden -> orden.ordenEstado() == estado)
                 .filter(orden -> orden.plato() != null)
                 .filter(orden -> orden.plato().categoria() != null)
                 .filter(orden -> orden.plato().categoria() != Categoria.Bebida)
                 .sorted((a, b) -> a.fecha().compareTo(b.fecha()))
                 .toList();
+    }
+
+    private Orden hidratarOrden(Orden orden) {
+        if (orden == null) {
+            return null;
+        }
+
+        Pedido pedidoHidratado = hidratarPedido(orden.pedido());
+
+        return new Orden(
+                orden.id(),
+                pedidoHidratado,
+                orden.plato(),
+                orden.precio(),
+                orden.ordenEstado(),
+                orden.fecha(),
+                orden.detalles()
+        );
+    }
+
+    private Pedido hidratarPedido(Pedido pedidoBase) {
+        if (pedidoBase == null || pedidoBase.id() == null) {
+            return pedidoBase;
+        }
+
+        Pedido pedidoRepositorio = pedidoRepository.findById(pedidoBase.id()).orElse(pedidoBase);
+        Cuenta cuentaBase = pedidoRepositorio.cuenta() != null ? pedidoRepositorio.cuenta() : pedidoBase.cuenta();
+        Cuenta cuentaHidratada = hidratarCuenta(cuentaBase);
+
+        return new Pedido(
+                pedidoRepositorio.id(),
+                cuentaHidratada,
+                pedidoRepositorio.pedidoEstado(),
+                pedidoRepositorio.fechaPedido()
+        );
+    }
+
+    private Cuenta hidratarCuenta(Cuenta cuentaBase) {
+        if (cuentaBase == null || cuentaBase.id() == null) {
+            return cuentaBase;
+        }
+
+        boolean tieneMesas = cuentaBase.mesas() != null && !cuentaBase.mesas().isEmpty();
+        if (tieneMesas) {
+            return cuentaBase;
+        }
+
+        if (cuentaRepository == null) {
+            return cuentaBase;
+        }
+
+        Optional<Cuenta> cuentaOpt = cuentaRepository.findById(cuentaBase.id());
+        return cuentaOpt.orElse(cuentaBase);
     }
 }

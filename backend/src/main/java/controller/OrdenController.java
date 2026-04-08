@@ -135,8 +135,9 @@ public class OrdenController {
                             if (orden.pedido() != null
                                     && orden.pedido().cuenta() != null
                                     && orden.pedido().cuenta().id() != null) {
-                                notificacionApplicationService
-                                        .crearNotificacionPedidoListo(orden.pedido().cuenta().id());
+                                notificacionApplicationService.crearNotificacionPedidoListo(
+                                        orden.pedido().cuenta().id()
+                                );
                             }
 
                             ctx.json(orden);

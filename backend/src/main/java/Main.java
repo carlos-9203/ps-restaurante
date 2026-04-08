@@ -53,7 +53,7 @@ public class Main {
         FirestoreReservaRepository reservaRepository = new FirestoreReservaRepository(db);
         FirestoreCuentaRepository cuentaRepository = new FirestoreCuentaRepository(db);
         FirestorePedidoRepository pedidoRepository = new FirestorePedidoRepository(db);
-        FirestoreOrdenRepository ordenRepository = new FirestoreOrdenRepository(db);
+        FirestoreOrdenRepository ordenRepository = new FirestoreOrdenRepository(db, pedidoRepository, cuentaRepository);
         FirestoreNotificacionRepository notificacionRepository = new FirestoreNotificacionRepository(db);
 
         MesaSeeder.seed(mesaRepository);
@@ -86,7 +86,8 @@ public class Main {
                 ordenRepository,
                 pedidoRepository,
                 platoRepository,
-                pedidoApplicationService
+                pedidoApplicationService,
+                cuentaRepository
         );
 
         PagoApplicationService pagoApplicationService = new PagoApplicationService(
