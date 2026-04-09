@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class OrdenApplicationService {
+
     private final OrdenRepository ordenRepository;
     private final PedidoRepository pedidoRepository;
     private final PlatoRepository platoRepository;
@@ -49,6 +50,7 @@ public class OrdenApplicationService {
     public Orden crearOrdenDesdePedidoYPlato(String pedidoId, String platoId, String detalles) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+
         pedido = hidratarPedido(pedido);
 
         Plato plato = platoRepository.findById(platoId)
@@ -175,6 +177,7 @@ public class OrdenApplicationService {
 
         Orden guardada = ordenRepository.update(orden.id(), actualizada);
         pedidoApplicationService.recalcularEstadoPedido(orden.pedido().id());
+
         return hidratarOrden(guardada);
     }
 
@@ -193,6 +196,7 @@ public class OrdenApplicationService {
 
         Orden guardada = ordenRepository.update(orden.id(), actualizada);
         pedidoApplicationService.recalcularEstadoPedido(orden.pedido().id());
+
         return hidratarOrden(guardada);
     }
 
@@ -211,6 +215,7 @@ public class OrdenApplicationService {
 
         Orden guardada = ordenRepository.update(orden.id(), actualizada);
         pedidoApplicationService.recalcularEstadoPedido(orden.pedido().id());
+
         return hidratarOrden(guardada);
     }
 
@@ -248,10 +253,18 @@ public class OrdenApplicationService {
     }
 
     private boolean cuentaNoPagada(Orden orden) {
-        if (orden == null || orden.pedido() == null || orden.pedido().cuenta() == null) {
+        if (orden == null) {
+            return false;
+        }
+
+        Orden ordenHidratada = hidratarOrden(orden);
+
+        if (ordenHidratada.pedido() == null || ordenHidratada.pedido().cuenta() == null) {
             return true;
         }
-        return !orden.pedido().cuenta().payed();
+
+        Cuenta cuenta = ordenHidratada.pedido().cuenta();
+        return !cuenta.payed();
     }
 
     private Orden hidratarOrden(Orden orden) {
@@ -279,7 +292,10 @@ public class OrdenApplicationService {
 
         Pedido pedidoRepositorio = pedidoRepository.findById(pedidoBase.id()).orElse(pedidoBase);
 
-        Cuenta cuentaBase = pedidoRepositorio.cuenta() != null ? pedidoRepositorio.cuenta() : pedidoBase.cuenta();
+        Cuenta cuentaBase = pedidoRepositorio.cuenta() != null
+                ? pedidoRepositorio.cuenta()
+                : pedidoBase.cuenta();
+
         Cuenta cuentaHidratada = hidratarCuenta(cuentaBase);
 
         return new Pedido(
@@ -295,18 +311,10 @@ public class OrdenApplicationService {
             return cuentaBase;
         }
 
-        boolean tieneMesas = cuentaBase.mesas() != null && !cuentaBase.mesas().isEmpty();
-        boolean tienePassword = cuentaBase.password() != null;
-
-        if (tieneMesas && tienePassword) {
-            return cuentaBase;
-        }
-
         if (cuentaRepository == null) {
             return cuentaBase;
         }
 
-        Optional<Cuenta> cuentaOpt = cuentaRepository.findById(cuentaBase.id());
-        return cuentaOpt.orElse(cuentaBase);
+        return cuentaRepository.findById(cuentaBase.id()).orElse(cuentaBase);
     }
 }
