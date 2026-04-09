@@ -1,7 +1,14 @@
+export type EstadoPedido = 'pendiente' | 'preparando' | 'listo' | 'recoger' | 'entregado' ;
+
+export interface ItemPedido {
+  cantidad: number;
+  nombre: string;
+}
+
 export interface Pedido {
   id: string;
-  mesa: string;
-  productos: { nombre: string; cantidad: number }[];
-  estado: 'PENDIENTE' | 'PREPARACION' | 'LISTO';
-  horaPedido: Date;
+  mesa: number;
+  estado: EstadoPedido;
+  tiempo: string;
+  items: ItemPedido[];
 }

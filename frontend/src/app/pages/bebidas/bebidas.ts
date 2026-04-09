@@ -1,31 +1,17 @@
+import { TarjetaPedidoComponent } from '../../components/tarjeta-pedido/tarjeta-pedido';
 import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-// 1. Añadimos el nuevo estado "preparando"
-export type EstadoPedido = 'pendiente' | 'preparando' | 'listo';
-
-export interface ItemPedido {
-  cantidad: number;
-  nombre: string;
-}
-
-export interface PedidoBebida {
-  id: string;
-  mesa: number;
-  estado: EstadoPedido;
-  tiempo: string;
-  items: ItemPedido[];
-}
+import { Pedido } from '../../models/pedido.model';
 
 @Component({
   selector: 'app-bebidas',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TarjetaPedidoComponent],
   templateUrl: './bebidas.html',
   styleUrl: './bebidas.css',
 })
 export class BebidasComponent {
-  pedidos = signal<PedidoBebida[]>([
+  pedidos = signal<Pedido[]>([
     {
       id: '1',
       mesa: 5,
@@ -97,29 +83,30 @@ export class BebidasComponent {
 
   private audioNotificacion = new Audio('audio/campana.mp3');
 
-  recibirNuevoPedido(nuevoPedido: PedidoBebida) {
+  recibirNuevoPedido(nuevoPedido: Pedido) {
     this.reproducirSonido();
     this.pedidos.update((lista) => [...lista, nuevoPedido]);
   }
 
   private reproducirSonido() {
     this.audioNotificacion.currentTime = 0;
-    this.audioNotificacion.play().catch((error) => {
-      console.warn('El navegador bloqueó el sonido:', error);
-    });
+    this.audioNotificacion.play().catch(e => console.warn(e));
   }
 
-  // 2. Ordenamos por 3 niveles de prioridad
   pedidosOrdenados = computed(() => {
-    const prioridad = { pendiente: 1, preparando: 2, listo: 3 };
+    const prioridad: Record<string, number> = {
+      pendiente: 1,
+      preparando: 2,
+      listo: 3,
+      recoger: 4,
+      entregado: 5
+    };
     return [...this.pedidos()].sort((a, b) => prioridad[a.estado] - prioridad[b.estado]);
   });
 
-  // Solo contamos los que aún no están listos
   pendientesCount = computed(() => this.pedidos().filter((p) => p.estado !== 'listo').length);
 
-  // 3. Nuevas funciones para el flujo
-  avanzarEstado(pedido: PedidoBebida) {
+  avanzarEstado(pedido: Pedido) {
     this.pedidos.update((lista) =>
       lista.map((p) => {
         if (p.id === pedido.id) {
@@ -131,12 +118,10 @@ export class BebidasComponent {
     );
   }
 
-  retrocederEstado(pedido: PedidoBebida) {
+  retrocederEstado(pedido: Pedido) {
     this.pedidos.update(lista => lista.map(p => {
       if (p.id === pedido.id) {
-        // Si está listo, vuelve a preparando
         if (p.estado === 'listo') return { ...p, estado: 'preparando' };
-        // Si se está preparando, vuelve a la cola de pendientes
         if (p.estado === 'preparando') return { ...p, estado: 'pendiente' };
       }
       return p;

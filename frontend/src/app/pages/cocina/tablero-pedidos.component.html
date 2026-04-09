@@ -1,5 +1,5 @@
 <div class="vista-cocina">
-  
+
   <header class="navbar">
     <div class="logo-area">
       <span class="simbolo-logo">🔥</span> </div>
@@ -9,25 +9,25 @@
     <h1 class="main-title">Monitor de Cocina</h1>
 
     <div class="contenedor-tablero" cdkDropListGroup>
-      
+
       <div class="columna col-pendiente">
         <div class="cabecera-columna">
           <div class="dot"></div>
           <h2 class="titulo-columna">PENDIENTE</h2>
           <span class="badge">{{ pedidosPendientes.length }} PENDIENTES</span>
         </div>
-        
+
         <div cdkDropList id="lista-pendiente" [cdkDropListData]="pedidosPendientes" class="lista-pedidos" (cdkDropListDropped)="drop($event)">
           <div *ngFor="let pedido of pedidosPendientes" class="ticket-pedido" cdkDrag>
             <div class="ticket-content">
-              <p class="producto-nombre" *ngFor="let p of pedido.productos">{{ p.nombre }}</p>
+              <p class="producto-nombre" *ngFor="let p of pedido.items">{{ p.nombre }}</p>
               <div class="ticket-info">
                 <span>MESA {{ pedido.mesa }}</span>
                 <span class="timer">🕒 HACE 5 MIN</span>
               </div>
             </div>
             <div class="ticket-actions">
-              <button class="btn btn-empezar" (click)="cambiarEstado(pedido, 'PREPARACION')">
+              <button class="btn btn-empezar" (click)="cambiarEstado(pedido, 'preparando')">
                 EMPEZAR <span>▶</span>
               </button>
             </div>
@@ -41,19 +41,19 @@
           <h2 class="titulo-columna">EN PREPARACIÓN</h2>
           <span class="badge">{{ pedidosPreparacion.length }} PENDIENTES</span>
         </div>
-        
+
         <div cdkDropList id="lista-preparacion" [cdkDropListData]="pedidosPreparacion" class="lista-pedidos" (cdkDropListDropped)="drop($event)">
           <div *ngFor="let pedido of pedidosPreparacion" class="ticket-pedido" cdkDrag>
             <div class="ticket-content">
-              <p class="producto-nombre" *ngFor="let p of pedido.productos">{{ p.nombre }}</p>
+              <p class="producto-nombre" *ngFor="let p of pedido.items">{{ p.nombre }}</p>
               <div class="ticket-info">
                 <span>MESA {{ pedido.mesa }}</span>
                 <span class="timer">🕒 HACE 8 MIN</span>
               </div>
             </div>
             <div class="ticket-actions dual">
-              <button class="btn-back" (click)="cambiarEstado(pedido, 'PENDIENTE')">↩</button>
-              <button class="btn btn-listo" (click)="cambiarEstado(pedido, 'LISTO')">
+              <button class="btn-back" (click)="cambiarEstado(pedido, 'pendiente')">↩</button>
+              <button class="btn btn-listo" (click)="cambiarEstado(pedido, 'listo')">
                 LISTO <span>✔</span>
               </button>
             </div>
@@ -67,17 +67,17 @@
           <h2 class="titulo-columna">LISTO PARA SERVIR</h2>
           <span class="badge">{{ pedidosListo.length }} LISTOS</span>
         </div>
-        
+
         <div cdkDropList id="lista-listo" [cdkDropListData]="pedidosListo" class="lista-pedidos" (cdkDropListDropped)="drop($event)">
           <div *ngFor="let pedido of pedidosListo" class="ticket-pedido" cdkDrag>
             <div class="ticket-content">
-              <p class="producto-nombre" *ngFor="let p of pedido.productos">{{ p.nombre }}</p>
+              <p class="producto-nombre" *ngFor="let p of pedido.items">{{ p.nombre }}</p>
               <div class="ticket-info">
                 <span>MESA {{ pedido.mesa }}</span>
               </div>
             </div>
             <div class="ticket-actions">
-              <button class="btn-back single" (click)="cambiarEstado(pedido, 'PREPARACION')">↩</button>
+              <button class="btn-back single" (click)="cambiarEstado(pedido, 'preparando')">↩</button>
             </div>
           </div>
         </div>

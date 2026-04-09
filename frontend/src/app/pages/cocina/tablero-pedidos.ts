@@ -14,10 +14,9 @@ import {
   standalone: true,
   imports: [CommonModule, DragDropModule],
   templateUrl: './tablero-pedidos.component.html',
-  styleUrls: ['./tablero-pedidos.css']
+  styleUrls: ['./tablero-pedidos.css'],
 })
 export class TableroPedidos implements OnInit {
-
   pedidosPendientes: Pedido[] = [];
   pedidosPreparacion: Pedido[] = [];
   pedidosListo: Pedido[] = [];
@@ -25,23 +24,35 @@ export class TableroPedidos implements OnInit {
   ngOnInit(): void {
     // Datos de ejemplo
     this.pedidosPendientes = [
-      { id: '101', mesa: '1', productos: [{ nombre: 'Pollo con papas', cantidad: 1 }], estado: 'PENDIENTE', horaPedido: new Date() },
-      { id: '102', mesa: '3', productos: [{ nombre: 'Hamburguesa Especial', cantidad: 2 }], estado: 'PENDIENTE', horaPedido: new Date() }
+      {
+        id: '101',
+        mesa: 1,
+        items: [{ cantidad: 1, nombre: 'Pollo con papas' }],
+        estado: 'pendiente',
+        tiempo: '5 min',
+      },
+      {
+        id: '102',
+        mesa: 3,
+        items: [{ nombre: 'Hamburguesa Especial', cantidad: 2 }],
+        estado: 'pendiente',
+        tiempo: '5 min',
+      },
     ];
   }
 
   // Lógica para botones (clic manual)
-  cambiarEstado(pedido: Pedido, nuevoEstado: 'PENDIENTE' | 'PREPARACION' | 'LISTO' | 'ENTREGADO') {
+  cambiarEstado(pedido: Pedido, nuevoEstado: 'pendiente' | 'preparando' | 'listo' | 'ENTREGADO') {
     // Eliminamos de todas las listas
-    this.pedidosPendientes = this.pedidosPendientes.filter(p => p.id !== pedido.id);
-    this.pedidosPreparacion = this.pedidosPreparacion.filter(p => p.id !== pedido.id);
-    this.pedidosListo = this.pedidosListo.filter(p => p.id !== pedido.id);
+    this.pedidosPendientes = this.pedidosPendientes.filter((p) => p.id !== pedido.id);
+    this.pedidosPreparacion = this.pedidosPreparacion.filter((p) => p.id !== pedido.id);
+    this.pedidosListo = this.pedidosListo.filter((p) => p.id !== pedido.id);
 
     if (nuevoEstado !== 'ENTREGADO') {
       pedido.estado = nuevoEstado;
-      if (nuevoEstado === 'PENDIENTE') this.pedidosPendientes.push(pedido);
-      if (nuevoEstado === 'PREPARACION') this.pedidosPreparacion.push(pedido);
-      if (nuevoEstado === 'LISTO') this.pedidosListo.push(pedido);
+      if (nuevoEstado === 'pendiente') this.pedidosPendientes.push(pedido);
+      if (nuevoEstado === 'preparando') this.pedidosPreparacion.push(pedido);
+      if (nuevoEstado === 'listo') this.pedidosListo.push(pedido);
     }
   }
 
@@ -61,9 +72,9 @@ export class TableroPedidos implements OnInit {
       const pedido = event.container.data[event.currentIndex];
       const idContenedor = event.container.element.nativeElement.id;
 
-      if (idContenedor === 'lista-pendiente') pedido.estado = 'PENDIENTE';
-      if (idContenedor === 'lista-preparacion') pedido.estado = 'PREPARACION';
-      if (idContenedor === 'lista-listo') pedido.estado = 'LISTO';
+      if (idContenedor === 'lista-pendiente') pedido.estado = 'pendiente';
+      if (idContenedor === 'lista-preparacion') pedido.estado = 'preparando';
+      if (idContenedor === 'lista-listo') pedido.estado = 'listo';
     }
   }
 }

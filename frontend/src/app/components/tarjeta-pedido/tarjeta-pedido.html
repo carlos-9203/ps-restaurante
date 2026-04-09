@@ -1,0 +1,53 @@
+<div class="pedido-card"
+     [class.es-listo]="pedido.estado === 'listo' || pedido.estado === 'entregado'"
+     [class.es-preparando]="pedido.estado === 'preparando' || pedido.estado === 'recoger'">
+
+  <div class="bloque-mesa">
+    <div class="indicador-color"></div>
+    <div class="mesa-texto">
+      <span>MESA</span>
+      <strong>{{ pedido.mesa }}</strong>
+    </div>
+  </div>
+
+  <div class="bloque-contenido">
+    <div class="info-superior">
+      <span class="pildora-estado">{{ pedido.estado | titlecase }}</span>
+      <span class="tiempo">{{ pedido.tiempo }}</span>
+    </div>
+    <div class="lista-items">
+      @for (prod of pedido.items; track $index) {
+        <div class="item">
+          @if (!ocultarCantidad) {
+            <strong>{{ prod.cantidad }}</strong>
+          }
+          {{ prod.nombre }}
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="bloque-accion">
+    @if (pedido.estado === 'pendiente') {
+      <button class="btn-preparar" (click)="avanzar.emit(pedido)">PREPARAR</button>
+    } @else if (pedido.estado === 'preparando') {
+      <div class="grupo-botones-preparando">
+        <button class="btn-deshacer" (click)="retroceder.emit(pedido)">
+          <span class="iconify" data-icon="solar:undo-left-round-bold"></span>
+        </button>
+        <button class="btn-servir" (click)="avanzar.emit(pedido)">LISTO PARA SERVIR</button>
+      </div>
+    } @else if (pedido.estado === 'recoger') {
+      <button class="btn-preparar" (click)="avanzar.emit(pedido)">MARCAR ENTREGADO</button>
+    } @else if (pedido.estado === 'entregado') {
+      <button class="btn-deshacer" (click)="retroceder.emit(pedido)" style="background: transparent; color: #888;">
+        DESHACER
+      </button>
+    } @else {
+      <button class="btn-cancelar" (click)="retroceder.emit(pedido)">
+        CANCELAR
+        <span class="iconify" data-icon="solar:close-circle-bold"></span>
+      </button>
+    }
+  </div>
+</div>

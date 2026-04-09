@@ -1,6 +1,6 @@
 <div class="bebidas-page">
   <div class="header-bebidas">
-    <h1>Cola de Bebidas</h1>
+    <h1>Cola de Comidas</h1>
     <div class="contador-pendientes">
       <span class="dot rojo"></span> {{ pendientesCount() }} Pendientes
     </div>
@@ -10,7 +10,7 @@
     @for (pedido of pedidosOrdenados(); track pedido.id) {
       <app-tarjeta-pedido
         [pedido]="pedido"
-        (avanzar)="avanzarEstado($event)"
+        [ocultarCantidad]="true" (avanzar)="avanzarEstado($event)"
         (retroceder)="retrocederEstado($event)">
       </app-tarjeta-pedido>
     }

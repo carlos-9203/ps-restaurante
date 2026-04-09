@@ -9,16 +9,18 @@ import { QrGenerator } from './feature/admin/qr-generator/qr-generator';
 import { MenuPage } from './feature/menu/menu-page/menu-page';
 import { BillPage } from './feature/bill/bill-page/bill-page';
 import { TableroPedidos } from './pages/cocina/tablero-pedidos';
+import { ComidasComponent } from './pages/comidas/comidas';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'mesas', pathMatch: 'full' },
 
   { path: 'mesas', component: MesasComponent },
   { path: 'bebidas', component: BebidasComponent },
+  { path: 'comidas', component: ComidasComponent },
 
   { path: 'acceso/:id', component: TableLogin },
   { path: 'admin/generar-qr', component: QrGenerator },
-  { path: 'menu/:id', component: MenuPage,  canActivate: [tableAccessGuard]},
+  { path: 'menu/:id', component: MenuPage, canActivate: [tableAccessGuard] },
   { path: 'cuenta/:id', component: BillPage, canActivate: [tableAccessGuard] },
   { path: 'cocina', component: TableroPedidos },
 ];
