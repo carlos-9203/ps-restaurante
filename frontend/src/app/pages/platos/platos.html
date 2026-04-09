@@ -1,83 +1,114 @@
-<app-navbar></app-navbar>
-
 <section class="platos-page">
-  <header class="header-platos">
-    <div>
-      <p class="eyebrow">Sala / Camareros</p>
-      <h1>Platos pendientes de servir</h1>
-      <p class="subtitulo">
-        Aquí se muestran los platos de cocina que están listos o ya entregados,
-        y solo desaparecen cuando la cuenta queda pagada.
-      </p>
-    </div>
+  <div class="page-shell">
+    <header class="page-header">
+      <div class="page-header__content">
+        <p class="page-eyebrow">SALA</p>
+        <h1>Platos pendientes de servir</h1>
+        <p class="page-description">
+          Aquí se muestran los platos de cocina que están listos o ya entregados.
+          Solo desaparecen cuando la cuenta queda pagada.
+        </p>
+      </div>
 
-    <div class="contador-listos">
-      <span class="dot verde"></span>
-      <span>{{ pendientesDeEntregaCount() }} pendientes</span>
-    </div>
-  </header>
+      <div class="page-summary">
+        <div class="summary-card">
+          <span class="summary-card__label">Pendientes</span>
+          <span class="summary-card__value">{{ pendientesDeEntregaCount() }}</span>
+        </div>
+      </div>
+    </header>
 
-  @if (cargando() && !hayDatos()) {
-    <div class="estado-vacio">
-      <p>Cargando platos de sala...</p>
-    </div>
-  } @else if (error() && !hayDatos()) {
-    <div class="estado-vacio error">
-      <p>{{ error() }}</p>
-    </div>
-  } @else if (!hayDatos()) {
-    <div class="estado-vacio">
-      <p>No hay platos visibles en sala.</p>
-    </div>
-  } @else {
-    <div class="lista-ordenes">
-      @for (orden of ordenesOrdenadas(); track orden.id) {
-        <article class="orden-card" [class.entregada]="yaEntregada(orden)">
-          <div class="bloque-mesa">
-            <span class="indicador-color"></span>
+    @if (cargando() && !hayDatos()) {
+      <section class="empty-state">
+        <div class="empty-state__card">
+          <h2>Cargando platos...</h2>
+          <p>Estamos obteniendo la información de sala.</p>
+        </div>
+      </section>
+    } @else if (error() && !hayDatos()) {
+      <section class="empty-state">
+        <div class="empty-state__card empty-state__card--error">
+          <h2>No se pudieron cargar los platos</h2>
+          <p>{{ error() }}</p>
+        </div>
+      </section>
+    } @else if (!hayDatos()) {
+      <section class="empty-state">
+        <div class="empty-state__card">
+          <h2>No hay platos visibles</h2>
+          <p>
+            Cuando cocina marque platos como listos, aparecerán aquí para servirlos.
+          </p>
+        </div>
+      </section>
+    } @else {
+      <section class="platos-grid">
+        @for (orden of ordenesOrdenadas(); track orden.id) {
+          <article
+            class="plato-card"
+            [class.plato-card--entregado]="yaEntregada(orden)"
+          >
+            <div class="plato-card__top">
+              <div class="mesa-badge">
+                <span class="mesa-badge__label">Mesa</span>
+                <span class="mesa-badge__value">{{ numeroMesaPlano(orden) }}</span>
+              </div>
 
-            <div class="mesa-texto">
-              <span>MESA</span>
-              <strong>{{ numeroMesaPlano(orden) }}</strong>
-            </div>
-          </div>
-
-          <div class="bloque-contenido">
-            <div class="info-superior">
-              <span class="pildora-estado" [class.pildora-entregada]="yaEntregada(orden)">
+              <div
+                class="estado-badge"
+                [class.estado-badge--listo]="!yaEntregada(orden)"
+                [class.estado-badge--entregado]="yaEntregada(orden)"
+              >
                 {{ etiquetaEstado(orden) }}
-              </span>
-              <span class="dato-secundario">{{ categoriaCorta(orden.plato.categoria) }}</span>
-              <span class="dato-secundario">Pedido {{ pedidoIdDeOrden(orden) }}</span>
+              </div>
             </div>
 
-            <h2 class="titulo-plato">{{ orden.plato.nombre }}</h2>
+            <div class="plato-card__body">
+              <div class="plato-card__meta">
+                <span class="categoria-chip">{{ categoriaCorta(orden.plato.categoria) }}</span>
+                <span class="pedido-chip">Pedido {{ pedidoIdDeOrden(orden) }}</span>
+              </div>
 
-            <p class="mesa-destino">{{ mesaDeOrden(orden) }}</p>
+              <h2 class="plato-card__title">{{ orden.plato.nombre }}</h2>
 
-            <p class="detalle-plato">{{ detallesVisibles(orden) }}</p>
+              <div class="plato-card__info">
+                <div class="info-row">
+                  <span class="info-row__label">Mesa</span>
+                  <span class="info-row__value">{{ mesaDeOrden(orden) }}</span>
+                </div>
 
-            <p class="tiempo-listo">{{ tiempoLista(orden) }}</p>
-          </div>
+                <div class="info-row">
+                  <span class="info-row__label">Detalles</span>
+                  <span class="info-row__value">{{ detallesVisibles(orden) }}</span>
+                </div>
 
-          <div class="bloque-accion">
-            <button
-              class="btn-entregar"
-              type="button"
-              [disabled]="procesandoOrdenId() === orden.id || yaEntregada(orden)"
-              (click)="entregarOrden(orden)"
-            >
-              {{
-                procesandoOrdenId() === orden.id
-                  ? 'ENTREGANDO...'
-                  : yaEntregada(orden)
-                    ? 'ENTREGADO'
-                    : 'ENTREGAR'
-              }}
-            </button>
-          </div>
-        </article>
-      }
-    </div>
-  }
+                <div class="info-row">
+                  <span class="info-row__label">Tiempo</span>
+                  <span class="info-row__value">{{ tiempoLista(orden) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="plato-card__footer">
+              <button
+                type="button"
+                class="action-button"
+                [class.action-button--done]="yaEntregada(orden)"
+                (click)="entregarOrden(orden)"
+                [disabled]="procesandoOrdenId() !== null || yaEntregada(orden)"
+              >
+                {{
+                  procesandoOrdenId() === orden.id
+                    ? 'ENTREGANDO...'
+                    : yaEntregada(orden)
+                      ? 'ENTREGADO'
+                      : 'MARCAR COMO ENTREGADO'
+                }}
+              </button>
+            </div>
+          </article>
+        }
+      </section>
+    }
+  </div>
 </section>

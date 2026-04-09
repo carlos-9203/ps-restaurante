@@ -1,297 +1,376 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  color: #2d2118;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 .bebidas-page {
-  padding: 2rem 2.5rem;
-  max-width: 1280px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.38), transparent 26%),
+    linear-gradient(180deg, #f3eee6 0%, #e9dfd2 100%);
+  padding: 32px 24px 40px;
+}
+
+.page-shell {
+  max-width: 1320px;
   margin: 0 auto;
 }
 
-.header-bebidas {
+.page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  align-items: stretch;
+  gap: 24px;
+  margin-bottom: 28px;
+  padding: 28px 30px;
+  border-radius: 24px;
+  background: rgba(255, 252, 247, 0.84);
+  border: 1px solid rgba(125, 89, 55, 0.12);
+  box-shadow: 0 18px 50px rgba(72, 44, 20, 0.08);
+  backdrop-filter: blur(6px);
 }
 
-.eyebrow {
-  margin: 0 0 0.25rem;
+.page-header__content {
+  flex: 1;
+}
+
+.page-eyebrow {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #8a6a45;
+  color: #8a5e38;
 }
 
-.header-bebidas h1 {
+.page-header h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1.05;
   font-weight: 800;
-  color: #1f1f1f;
+  color: #2f2013;
 }
 
-.subtitulo {
-  margin: 0.35rem 0 0;
-  color: #5a5148;
-  font-size: 0.95rem;
+.page-description {
+  max-width: 760px;
+  margin: 14px 0 0;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: #684c33;
 }
 
-.contador-pendientes {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid #cfbea8;
-  padding: 0.7rem 1rem;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: 700;
+.page-summary {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  color: #333;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-card {
+  min-width: 150px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fffaf4 0%, #f6ecdf 100%);
+  border: 1px solid rgba(125, 89, 55, 0.14);
+  box-shadow: 0 10px 30px rgba(72, 44, 20, 0.08);
+}
+
+.summary-card__label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #8a6544;
+  margin-bottom: 10px;
+}
+
+.summary-card__value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #2f2013;
+}
+
+.bebidas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 22px;
+}
+
+.bebida-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #fffdf9 0%, #f8f0e6 100%);
+  border: 1px solid rgba(125, 89, 55, 0.12);
+  box-shadow: 0 16px 35px rgba(72, 44, 20, 0.1);
+  overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.bebida-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 42px rgba(72, 44, 20, 0.14);
+  border-color: rgba(125, 89, 55, 0.2);
+}
+
+.bebida-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 20px 0;
+}
+
+.mesa-badge {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #f3e4d1;
+  border: 1px solid rgba(125, 89, 55, 0.12);
+}
+
+.mesa-badge__label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9a6b3f;
+}
+
+.mesa-badge__value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #2f2013;
+}
+
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
+.estado-badge--pendiente {
+  color: #8f5c1e;
+  background: #fde8b9;
+  border: 1px solid #f0cf7a;
 }
 
-.dot.rojo {
-  background: #b31c1c;
+.estado-badge--preparacion {
+  color: #875521;
+  background: #f7d8bc;
+  border: 1px solid #ebbb8a;
 }
 
-.lista-pedidos {
+.estado-badge--listo {
+  color: #45613d;
+  background: #dcefd6;
+  border: 1px solid #b7d5ad;
+}
+
+.bebida-card__body {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.pedido-card {
-  display: flex;
-  align-items: stretch;
-  gap: 1.25rem;
-  padding: 1rem 1.15rem;
-  border-radius: 18px;
-  border: 2px solid #d8c8b4;
-  background: rgba(255, 255, 255, 0.34);
-  transition: transform 0.15s ease, opacity 0.2s ease, border-color 0.2s ease;
-}
-
-.pedido-card.es-listo {
-  opacity: 0.5;
-}
-
-.pedido-card.es-preparando {
-  border-color: #b99cff;
-  background: rgba(255, 255, 255, 0.58);
-}
-
-.bloque-mesa {
-  position: relative;
-  min-width: 106px;
-  border-radius: 14px;
-  border: 1px solid #cdbca7;
-  background: #eadfce;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 0.85rem 1rem;
-}
-
-.indicador-color {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 7px;
-  background: #b31c1c;
-}
-
-.pedido-card.es-preparando .indicador-color {
-  background: #7b3ff2;
-}
-
-.pedido-card.es-listo .indicador-color {
-  background: #18a04b;
-}
-
-.mesa-texto {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.mesa-texto span {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #1b1b1b;
-}
-
-.mesa-texto strong {
-  font-size: 1.7rem;
-  line-height: 1;
-  color: #1b1b1b;
-  margin-top: 0.15rem;
-}
-
-.bloque-contenido {
   flex: 1;
-  display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  justify-content: center;
+  padding: 18px 20px 20px;
 }
 
-.info-superior {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.pildora-estado {
-  border-radius: 999px;
-  padding: 0.35rem 0.8rem;
-  font-size: 0.74rem;
+.bebida-card__title {
+  margin: 0 0 18px;
+  font-size: 1.65rem;
+  line-height: 1.15;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  color: white;
-  background: #a52a2a;
+  color: #2f2013;
 }
 
-.pedido-card.es-preparando .pildora-estado {
-  background: #7b3ff2;
+.bebida-card__info {
+  display: grid;
+  gap: 12px;
 }
 
-.pedido-card.es-listo .pildora-estado {
-  background: #9be3b2;
-  color: #135d2f;
+.info-row {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(125, 89, 55, 0.08);
 }
 
-.dato-secundario {
-  font-size: 0.82rem;
-  color: #5b5248;
-  font-weight: 600;
+.info-row__label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #98704e;
 }
 
-.lista-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 1rem;
+.info-row__value {
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: #3a2a1d;
+  word-break: break-word;
 }
 
-.item-bebida {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid #dccdb9;
-  border-radius: 999px;
-  padding: 0.5rem 0.75rem;
-  color: #1f1f1f;
+.bebida-card__footer {
+  padding: 0 20px 20px;
+  margin-top: auto;
 }
 
-.item-bebida strong {
-  font-size: 0.95rem;
+.footer-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
-.item-bebida span {
-  font-size: 0.93rem;
-}
-
-.bloque-accion {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-}
-
-.btn-preparar,
-.btn-servir,
-.btn-cancelar,
-.btn-deshacer {
+.primary-button,
+.secondary-button {
+  width: 100%;
+  min-height: 48px;
   border: none;
-  border-radius: 10px;
-  cursor: pointer;
+  border-radius: 16px;
+  padding: 0 18px;
+  font-size: 0.92rem;
   font-weight: 800;
-  transition: transform 0.1s ease, opacity 0.15s ease;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    opacity 0.15s ease;
 }
 
-.btn-preparar,
-.btn-servir,
-.btn-cancelar {
-  padding: 0.95rem 1.2rem;
-  color: white;
-  font-size: 0.95rem;
+.primary-button {
+  color: #fffaf4;
+  background: linear-gradient(180deg, #8b5a2b 0%, #6f431d 100%);
+  box-shadow: 0 10px 20px rgba(111, 67, 29, 0.22);
 }
 
-.btn-preparar {
-  background: #7b3ff2;
+.secondary-button {
+  color: #684c33;
+  background: #efe4d7;
+  border: 1px solid rgba(125, 89, 55, 0.16);
 }
 
-.btn-servir {
-  background: #159d43;
+.primary-button:hover:not(:disabled),
+.secondary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
 }
 
-.btn-cancelar {
-  background: #b31c1c;
-}
-
-.btn-deshacer {
-  width: 52px;
-  height: 52px;
-  background: #c8cdd4;
-  color: #334155;
-  font-size: 1.2rem;
-}
-
-.btn-preparar:active,
-.btn-servir:active,
-.btn-cancelar:active,
-.btn-deshacer:active {
-  transform: scale(0.96);
-}
-
-button:disabled {
-  opacity: 0.65;
+.primary-button:disabled,
+.secondary-button:disabled {
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.grupo-botones-preparando {
+.empty-state {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 0.75rem;
+  min-height: 340px;
 }
 
-.estado-vacio {
-  border: 2px dashed #d7c6b0;
-  border-radius: 18px;
-  padding: 2rem;
+.empty-state__card {
+  width: 100%;
+  max-width: 640px;
+  padding: 34px 28px;
+  border-radius: 24px;
   text-align: center;
-  color: #5f564c;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 252, 247, 0.88);
+  border: 1px solid rgba(125, 89, 55, 0.12);
+  box-shadow: 0 16px 38px rgba(72, 44, 20, 0.08);
 }
 
-.estado-vacio.error {
-  border-color: #dca9a9;
-  color: #8a1f1f;
+.empty-state__card h2 {
+  margin: 0 0 10px;
+  font-size: 1.6rem;
+  color: #2f2013;
 }
 
-@media (max-width: 900px) {
-  .bebidas-page {
-    padding: 1.25rem;
-  }
+.empty-state__card p {
+  margin: 0;
+  color: #6c5037;
+  line-height: 1.6;
+}
 
-  .header-bebidas {
+.empty-state__card--error {
+  border-color: rgba(170, 75, 60, 0.18);
+  background: rgba(255, 245, 243, 0.92);
+}
+
+@media (max-width: 920px) {
+  .page-header {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .pedido-card {
-    flex-direction: column;
+  .page-summary {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .bebidas-page {
+    padding: 18px 14px 28px;
   }
 
-  .bloque-accion {
-    margin-left: 0;
+  .page-header {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .page-header h1 {
+    font-size: 1.9rem;
+  }
+
+  .page-description {
+    font-size: 0.96rem;
+  }
+
+  .bebidas-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .bebida-card {
+    border-radius: 20px;
+  }
+
+  .bebida-card__top,
+  .bebida-card__body,
+  .bebida-card__footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .bebida-card__title {
+    font-size: 1.4rem;
+  }
+
+  .primary-button,
+  .secondary-button {
+    min-height: 46px;
+    font-size: 0.9rem;
   }
 }

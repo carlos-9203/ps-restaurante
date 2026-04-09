@@ -1,11 +1,16 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { forkJoin, take } from 'rxjs';
+import { catchError, forkJoin, map, of, take } from 'rxjs';
 import {
   CategoriaPlatoBackend,
   OrdenCocinaResponse,
   OrdenesApiService,
 } from '../../services/ordenes-api.service';
+
+type ResultadoCarga = {
+  ok: boolean;
+  data: OrdenCocinaResponse[];
+};
 
 @Component({
   selector: 'app-tablero-pedidos',
@@ -16,14 +21,15 @@ import {
 })
 export class TableroPedidos implements OnInit, OnDestroy {
   private readonly ordenesApiService = inject(OrdenesApiService);
+
   private intervaloRefresco?: number;
   private intervaloReloj?: number;
 
   private readonly pollingMs = 3000;
   private readonly refreshAfterWriteMs = 1500;
 
-  readonly cargando = signal(true);
-  readonly actualizando = signal(false);
+  readonly cargando = signal<boolean>(true);
+  readonly actualizando = signal<boolean>(false);
   readonly error = signal<string | null>(null);
 
   readonly ordenesPendientes = signal<OrdenCocinaResponse[]>([]);
@@ -32,7 +38,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
   readonly ahora = signal(Date.now());
   readonly ordenDetalleAbiertaId = signal<string | null>(null);
-  readonly pausadoHasta = signal<number>(0);
+  readonly pausadoHasta = signal(0);
 
   readonly totalOrdenes = computed(
     () =>
@@ -94,10 +100,9 @@ export class TableroPedidos implements OnInit, OnDestroy {
       .marcarEnPreparacion(ordenId)
       .pipe(take(1))
       .subscribe({
-        next: () => {
-          this.recargarConRetardo(this.refreshAfterWriteMs);
-        },
-        error: () => {
+        next: () => this.recargarConRetardo(this.refreshAfterWriteMs),
+        error: (err) => {
+          console.error(err);
           this.error.set('No se ha podido actualizar el estado de la orden.');
           this.recargarConRetardo(this.refreshAfterWriteMs);
         },
@@ -121,10 +126,9 @@ export class TableroPedidos implements OnInit, OnDestroy {
       .marcarPendiente(ordenId)
       .pipe(take(1))
       .subscribe({
-        next: () => {
-          this.recargarConRetardo(this.refreshAfterWriteMs);
-        },
-        error: () => {
+        next: () => this.recargarConRetardo(this.refreshAfterWriteMs),
+        error: (err) => {
+          console.error(err);
           this.error.set('No se ha podido actualizar el estado de la orden.');
           this.recargarConRetardo(this.refreshAfterWriteMs);
         },
@@ -145,10 +149,9 @@ export class TableroPedidos implements OnInit, OnDestroy {
       .marcarLista(ordenId)
       .pipe(take(1))
       .subscribe({
-        next: () => {
-          this.recargarConRetardo(this.refreshAfterWriteMs);
-        },
-        error: () => {
+        next: () => this.recargarConRetardo(this.refreshAfterWriteMs),
+        error: (err) => {
+          console.error(err);
           this.error.set('No se ha podido actualizar el estado de la orden.');
           this.recargarConRetardo(this.refreshAfterWriteMs);
         },
@@ -157,6 +160,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
   mesaDeOrden(orden: OrdenCocinaResponse): string {
     const mesas = orden.pedido?.cuenta?.mesas ?? [];
+
     if (mesas.length > 0) {
       if (mesas.length === 1) {
         return `Mesa ${mesas[0].id}`;
@@ -174,14 +178,10 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
   origenMesa(orden: OrdenCocinaResponse): string {
     const mesas = orden.pedido?.cuenta?.mesas ?? [];
-    if (mesas.length > 0) {
-      return 'pedido.cuenta.mesas';
-    }
+    if (mesas.length > 0) return 'pedido.cuenta.mesas';
 
     const mesaDesdeDetalles = this.extraerMesaDesdeTexto(orden.detalles);
-    if (mesaDesdeDetalles) {
-      return 'detalles';
-    }
+    if (mesaDesdeDetalles) return 'detalles';
 
     return 'no enviada por la API';
   }
@@ -226,20 +226,13 @@ export class TableroPedidos implements OnInit, OnDestroy {
   tiempoTranscurrido(fechaIso: string): string {
     const diffMin = this.diferenciaEnMinutos(fechaIso);
 
-    if (diffMin < 1) {
-      return '< 1 min';
-    }
-    if (diffMin < 60) {
-      return `${diffMin} min`;
-    }
+    if (diffMin < 1) return '< 1 min';
+    if (diffMin < 60) return `${diffMin} min`;
 
     const horas = Math.floor(diffMin / 60);
     const minutosRestantes = diffMin % 60;
 
-    if (minutosRestantes === 0) {
-      return `${horas} h`;
-    }
-
+    if (minutosRestantes === 0) return `${horas} h`;
     return `${horas} h ${minutosRestantes} min`;
   }
 
@@ -268,13 +261,8 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
     const restantes = estimado - transcurrido;
 
-    if (restantes > 0) {
-      return `ETA ${restantes} min`;
-    }
-    if (restantes === 0) {
-      return 'ETA 0 min';
-    }
-
+    if (restantes > 0) return `ETA ${restantes} min`;
+    if (restantes === 0) return 'ETA 0 min';
     return `Retraso ${Math.abs(restantes)} min`;
   }
 
@@ -283,28 +271,17 @@ export class TableroPedidos implements OnInit, OnDestroy {
     const transcurrido = this.diferenciaEnMinutos(orden.fecha);
     const restantes = estimado - transcurrido;
 
-    if (orden.ordenEstado === 'Listo') {
-      return 'eta eta--ready';
-    }
-    if (restantes <= 0) {
-      return 'eta eta--late';
-    }
-    if (restantes <= 3) {
-      return 'eta eta--warning';
-    }
-
+    if (orden.ordenEstado === 'Listo') return 'eta eta--ready';
+    if (restantes <= 0) return 'eta eta--late';
+    if (restantes <= 3) return 'eta eta--warning';
     return 'eta eta--ok';
   }
 
   fechaLarga(fechaIso?: string | null): string {
-    if (!fechaIso) {
-      return 'Sin fecha';
-    }
+    if (!fechaIso) return 'Sin fecha';
 
     const fecha = new Date(fechaIso);
-    if (Number.isNaN(fecha.getTime())) {
-      return fechaIso;
-    }
+    if (Number.isNaN(fecha.getTime())) return fechaIso;
 
     return new Intl.DateTimeFormat('es-ES', {
       dateStyle: 'short',
@@ -315,12 +292,6 @@ export class TableroPedidos implements OnInit, OnDestroy {
   detalleTecnico(orden: OrdenCocinaResponse): string {
     const detalles = orden.detalles?.trim();
     return detalles && detalles.length > 0 ? detalles : 'Sin detalles';
-  }
-
-  onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src =
-      'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop';
   }
 
   private pausarSincronizacion(ms: number): void {
@@ -339,9 +310,8 @@ export class TableroPedidos implements OnInit, OnDestroy {
 
   private diferenciaEnMinutos(fechaIso: string): number {
     const fecha = new Date(fechaIso).getTime();
-    if (Number.isNaN(fecha)) {
-      return 0;
-    }
+    if (Number.isNaN(fecha)) return 0;
+
     return Math.max(0, Math.floor((this.ahora() - fecha) / 60000));
   }
 
@@ -361,9 +331,7 @@ export class TableroPedidos implements OnInit, OnDestroy {
   }
 
   private extraerMesaDesdeTexto(texto?: string | null): string | null {
-    if (!texto) {
-      return null;
-    }
+    if (!texto) return null;
     const match = texto.match(/\bmesa\s*[:#-]?\s*(\d+)\b/i);
     return match?.[1] ?? null;
   }
@@ -373,31 +341,46 @@ export class TableroPedidos implements OnInit, OnDestroy {
   }
 
   private cargarTablero(mostrarLoading: boolean): void {
-    if (this.estaSincronizacionPausada()) {
-      return;
-    }
+    if (this.estaSincronizacionPausada()) return;
 
     if (mostrarLoading) {
       this.cargando.set(true);
     }
 
-    this.error.set(null);
+    const cargaSegura = (obs: ReturnType<OrdenesApiService['obtenerPendientesCocina']>) =>
+      obs.pipe(
+        map((data) => ({ ok: true, data }) as ResultadoCarga),
+        catchError((err) => {
+          console.error(err);
+          return of({ ok: false, data: [] } as ResultadoCarga);
+        }),
+      );
 
     forkJoin({
-      pendientes: this.ordenesApiService.obtenerPendientesCocina(),
-      preparacion: this.ordenesApiService.obtenerEnPreparacionCocina(),
-      listas: this.ordenesApiService.obtenerListasCocina(),
+      pendientes: cargaSegura(this.ordenesApiService.obtenerPendientesCocina()),
+      preparacion: cargaSegura(this.ordenesApiService.obtenerEnPreparacionCocina()),
+      listas: cargaSegura(this.ordenesApiService.obtenerListasCocina()),
     })
       .pipe(take(1))
       .subscribe({
         next: ({ pendientes, preparacion, listas }) => {
-          const pendientesFiltradas = this.filtrarNoPagadas(pendientes);
-          const preparacionFiltradas = this.filtrarNoPagadas(preparacion);
-          const listasFiltradas = this.filtrarNoPagadas(listas);
+          const pendientesFiltradas = this.filtrarNoPagadas(pendientes.data);
+          const preparacionFiltradas = this.filtrarNoPagadas(preparacion.data);
+          const listasFiltradas = this.filtrarNoPagadas(listas.data);
 
           this.ordenesPendientes.set(pendientesFiltradas);
           this.ordenesPreparacion.set(preparacionFiltradas);
           this.ordenesListas.set(listasFiltradas);
+
+          const peticionesOk = [pendientes.ok, preparacion.ok, listas.ok].filter(Boolean).length;
+          const total = pendientesFiltradas.length + preparacionFiltradas.length + listasFiltradas.length;
+
+          if (peticionesOk === 0 && total === 0) {
+            this.error.set('No se ha podido cargar el tablero de cocina.');
+          } else {
+            this.error.set(null);
+          }
+
           this.cargando.set(false);
           this.actualizando.set(false);
 
@@ -414,7 +397,8 @@ export class TableroPedidos implements OnInit, OnDestroy {
             }
           }
         },
-        error: () => {
+        error: (err) => {
+          console.error(err);
           this.error.set('No se ha podido cargar el tablero de cocina.');
           this.cargando.set(false);
           this.actualizando.set(false);

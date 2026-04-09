@@ -14,7 +14,7 @@ export class QrGenerator {
   tableNumber = signal(1);
 
   // ⚠️ CAMBIA SOLO ESTA IP POR LA TUYA
-  private readonly fallbackIp = '192.168.1.20';
+  private readonly fallbackIp = '172.20.10.2';
 
   get baseUrl(): string {
     const { protocol, hostname, port } = window.location;

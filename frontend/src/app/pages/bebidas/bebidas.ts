@@ -1,204 +1,275 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { combineLatest, forkJoin, interval, of } from 'rxjs';
-import { catchError, startWith, switchMap, take } from 'rxjs/operators';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
-import { NavbarComponent } from '../../components/navbar/navbar';
+import { catchError, forkJoin, map, of, take } from 'rxjs';
 import {
-  EstadoOrdenBackend,
   OrdenCocinaResponse,
   OrdenesApiService,
 } from '../../services/ordenes-api.service';
 
-type EstadoVisualPedido = 'pendiente' | 'preparando' | 'listo';
-
-interface ItemAgrupadoBebida {
-  nombre: string;
-  cantidad: number;
-}
-
-interface PedidoBebidaAgrupado {
-  pedidoId: string;
-  cuentaId: string;
-  mesaId: string;
-  fechaPedido: string;
-  estado: EstadoVisualPedido;
-  ordenesIds: string[];
-  items: ItemAgrupadoBebida[];
-  totalItems: number;
-}
+type ResultadoCarga = {
+  ok: boolean;
+  data: OrdenCocinaResponse[];
+};
 
 @Component({
   selector: 'app-bebidas',
   standalone: true,
-  imports: [CommonModule, NavbarComponent],
+  imports: [CommonModule],
   templateUrl: './bebidas.html',
   styleUrl: './bebidas.css',
 })
-export class BebidasComponent {
+export class BebidasComponent implements OnInit, OnDestroy {
   private readonly ordenesApi = inject(OrdenesApiService);
-  private readonly destroyRef = inject(DestroyRef);
 
-  private readonly pollingMs = 2500;
+  private intervaloRefresco?: number;
+  private intervaloReloj?: number;
+
+  private readonly pollingMs = 3000;
   private readonly refreshAfterWriteMs = 1500;
 
-  readonly cargando = signal(true);
+  readonly cargando = signal<boolean>(true);
   readonly error = signal<string | null>(null);
-  readonly procesandoPedidoId = signal<string | null>(null);
-  readonly pausadoHasta = signal<number>(0);
-  readonly pedidos = signal<PedidoBebidaAgrupado[]>([]);
+  readonly procesandoOrdenId = signal<string | null>(null);
+  readonly pausadoHasta = signal(0);
+  readonly ahora = signal(Date.now());
 
-  readonly pedidosOrdenados = computed(() => {
-    const prioridad: Record<EstadoVisualPedido, number> = {
-      pendiente: 0,
-      preparando: 1,
-      listo: 2,
+  readonly ordenes = signal<OrdenCocinaResponse[]>([]);
+
+  readonly ordenesOrdenadas = computed(() => {
+    const prioridad: Record<string, number> = {
+      Pendiente: 1,
+      Preparación: 2,
+      Listo: 3,
     };
 
-    return [...this.pedidos()].sort((a, b) => {
-      const porEstado = prioridad[a.estado] - prioridad[b.estado];
-      if (porEstado !== 0) {
-        return porEstado;
-      }
+    return [...this.ordenes()].sort((a, b) => {
+      const porEstado = (prioridad[a.ordenEstado] ?? 99) - (prioridad[b.ordenEstado] ?? 99);
+      if (porEstado !== 0) return porEstado;
 
-      const fechaA = new Date(a.fechaPedido).getTime();
-      const fechaB = new Date(b.fechaPedido).getTime();
+      const fechaA = new Date(a.pedido?.fechaPedido ?? a.fecha).getTime();
+      const fechaB = new Date(b.pedido?.fechaPedido ?? b.fecha).getTime();
       return fechaA - fechaB;
     });
   });
 
   readonly pendientesCount = computed(
-    () => this.pedidos().filter((p) => p.estado !== 'listo').length,
+    () => this.ordenes().filter((o) => o.ordenEstado !== 'Listo').length,
   );
 
-  readonly hayDatos = computed(() => this.pedidosOrdenados().length > 0);
+  readonly listasCount = computed(
+    () => this.ordenes().filter((o) => o.ordenEstado === 'Listo').length,
+  );
 
-  constructor() {
-    interval(this.pollingMs)
-      .pipe(
-        startWith(0),
-        switchMap(() => {
-          if (this.estaSincronizacionPausada()) {
-            return of(null);
+  readonly hayDatos = computed(() => this.ordenesOrdenadas().length > 0);
+
+  ngOnInit(): void {
+    this.cargarBebidas(true);
+
+    this.intervaloRefresco = window.setInterval(() => {
+      if (!this.estaSincronizacionPausada()) {
+        this.cargarBebidas(false);
+      }
+    }, this.pollingMs);
+
+    this.intervaloReloj = window.setInterval(() => {
+      this.ahora.set(Date.now());
+    }, 30000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.intervaloRefresco) {
+      window.clearInterval(this.intervaloRefresco);
+    }
+    if (this.intervaloReloj) {
+      window.clearInterval(this.intervaloReloj);
+    }
+  }
+
+  avanzarEstado(orden: OrdenCocinaResponse): void {
+    if (this.procesandoOrdenId()) return;
+
+    if (orden.ordenEstado === 'Listo') return;
+
+    this.procesandoOrdenId.set(orden.id);
+    this.error.set(null);
+    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
+
+    const accion =
+      orden.ordenEstado === 'Pendiente'
+        ? this.ordenesApi.marcarEnPreparacion(orden.id)
+        : this.ordenesApi.marcarLista(orden.id);
+
+    accion.pipe(take(1)).subscribe({
+      next: () => this.recargarConRetardo(this.refreshAfterWriteMs),
+      error: (err) => {
+        console.error(err);
+        this.error.set('No se pudo actualizar la bebida.');
+        this.recargarConRetardo(this.refreshAfterWriteMs);
+      },
+    });
+  }
+
+  retrocederEstado(orden: OrdenCocinaResponse): void {
+    if (this.procesandoOrdenId()) return;
+    if (orden.ordenEstado === 'Pendiente') return;
+
+    this.procesandoOrdenId.set(orden.id);
+    this.error.set(null);
+    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
+
+    this.ordenesApi
+      .marcarPendiente(orden.id)
+      .pipe(take(1))
+      .subscribe({
+        next: () => this.recargarConRetardo(this.refreshAfterWriteMs),
+        error: (err) => {
+          console.error(err);
+          this.error.set('No se pudo actualizar la bebida.');
+          this.recargarConRetardo(this.refreshAfterWriteMs);
+        },
+      });
+  }
+
+  mesaDeOrden(orden: OrdenCocinaResponse): string {
+    const mesas = orden.pedido?.cuenta?.mesas ?? [];
+    if (mesas.length === 1) return `Mesa ${mesas[0].id}`;
+    if (mesas.length > 1) return `Mesas ${mesas.map((m) => m.id).join(', ')}`;
+
+    const mesaDetalles = this.extraerMesaDesdeTexto(orden.detalles);
+    return mesaDetalles ? `Mesa ${mesaDetalles}` : 'Mesa sin asignar';
+  }
+
+  numeroMesaPlano(orden: OrdenCocinaResponse): string {
+    const mesas = orden.pedido?.cuenta?.mesas ?? [];
+    if (mesas.length > 0) return mesas.map((m) => String(m.id)).join(', ');
+
+    return this.extraerMesaDesdeTexto(orden.detalles) ?? 'Sin mesa';
+  }
+
+  etiquetaEstado(orden: OrdenCocinaResponse): string {
+    switch (orden.ordenEstado) {
+      case 'Pendiente':
+        return 'PENDIENTE';
+      case 'Preparación':
+        return 'PREPARANDO';
+      case 'Listo':
+        return 'LISTO';
+      default:
+        return orden.ordenEstado.toUpperCase();
+    }
+  }
+
+  tiempoTexto(orden: OrdenCocinaResponse): string {
+    const referencia = orden.pedido?.fechaPedido ?? orden.fecha;
+    const diffMin = this.diferenciaEnMinutos(referencia);
+
+    if (diffMin < 1) return '< 1 min';
+    if (diffMin < 60) return `${diffMin} min`;
+
+    const horas = Math.floor(diffMin / 60);
+    const minutosRestantes = diffMin % 60;
+
+    return minutosRestantes === 0
+      ? `${horas} h`
+      : `${horas} h ${minutosRestantes} min`;
+  }
+
+  accionPrincipalTexto(orden: OrdenCocinaResponse): string {
+    switch (orden.ordenEstado) {
+      case 'Pendiente':
+        return 'PASAR A PREPARACIÓN';
+      case 'Preparación':
+        return 'MARCAR COMO LISTO';
+      case 'Listo':
+        return 'LISTO';
+      default:
+        return 'ACTUALIZAR';
+    }
+  }
+
+  detallesVisibles(orden: OrdenCocinaResponse): string {
+    const detalles = orden.detalles?.trim();
+    return detalles && detalles.length > 0 ? detalles : 'Sin detalles';
+  }
+
+  private cargarBebidas(mostrarLoading: boolean): void {
+    if (this.estaSincronizacionPausada()) return;
+
+    if (mostrarLoading) {
+      this.cargando.set(true);
+    }
+
+    const cargaSegura = (obs: ReturnType<OrdenesApiService['obtenerPendientesBarra']>) =>
+      obs.pipe(
+        map((data) => ({ ok: true, data }) as ResultadoCarga),
+        catchError((err) => {
+          console.error(err);
+          return of({ ok: false, data: [] } as ResultadoCarga);
+        }),
+      );
+
+    forkJoin({
+      pendientes: cargaSegura(this.ordenesApi.obtenerPendientesBarra()),
+      preparacion: cargaSegura(this.ordenesApi.obtenerEnPreparacionBarra()),
+      listas: cargaSegura(this.ordenesApi.obtenerListasBarra()),
+    })
+      .pipe(take(1))
+      .subscribe({
+        next: ({ pendientes, preparacion, listas }) => {
+          const combinadas = [
+            ...pendientes.data,
+            ...preparacion.data,
+            ...listas.data,
+          ];
+
+          const visibles = this.filtrarVisibles(combinadas);
+          this.ordenes.set(visibles);
+
+          const peticionesOk = [pendientes.ok, preparacion.ok, listas.ok].filter(Boolean).length;
+
+          if (peticionesOk === 0 && visibles.length === 0) {
+            this.error.set('No se pudieron cargar las bebidas.');
+          } else {
+            this.error.set(null);
           }
 
-          return combineLatest([
-            this.ordenesApi.obtenerPendientesBarra(),
-            this.ordenesApi.obtenerEnPreparacionBarra(),
-            this.ordenesApi.obtenerListasBarra(),
-          ]).pipe(
-            catchError((error) => {
-              console.error(error);
-              this.error.set('No se pudieron cargar las bebidas.');
-              this.cargando.set(false);
-              return of([
-                [] as OrdenCocinaResponse[],
-                [] as OrdenCocinaResponse[],
-                [] as OrdenCocinaResponse[],
-              ] as [
-                OrdenCocinaResponse[],
-                OrdenCocinaResponse[],
-                OrdenCocinaResponse[],
-              ]);
-            }),
-          );
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((resultado) => {
-        if (resultado === null) {
-          return;
-        }
-
-        const [pendientes, enPreparacion, listas] = resultado;
-        const todas = [...pendientes, ...enPreparacion, ...listas];
-        this.pedidos.set(this.agruparPorPedido(todas));
-        this.cargando.set(false);
-
-        if (!this.hayDatos()) {
-          this.error.set(null);
-        }
-      });
-  }
-
-  avanzarEstado(pedido: PedidoBebidaAgrupado): void {
-    if (!pedido.ordenesIds.length || this.procesandoPedidoId()) {
-      return;
-    }
-
-    this.procesandoPedidoId.set(pedido.pedidoId);
-    this.error.set(null);
-    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
-
-    const accion =
-      pedido.estado === 'pendiente'
-        ? this.ordenesApi.marcarEnPreparacion.bind(this.ordenesApi)
-        : this.ordenesApi.marcarLista.bind(this.ordenesApi);
-
-    forkJoin(pedido.ordenesIds.map((id) => accion(id)))
-      .pipe(take(1))
-      .subscribe({
-        next: () => {
-          this.recargarConRetardo(this.refreshAfterWriteMs);
+          this.cargando.set(false);
+          this.procesandoOrdenId.set(null);
         },
-        error: (error) => {
-          console.error(error);
-          this.error.set(
-            'No se pudo actualizar el estado del pedido de bebidas.',
-          );
-          this.recargarConRetardo(this.refreshAfterWriteMs);
+        error: (err) => {
+          console.error(err);
+          this.error.set('No se pudieron cargar las bebidas.');
+          this.cargando.set(false);
+          this.procesandoOrdenId.set(null);
         },
       });
   }
 
-  retrocederEstado(pedido: PedidoBebidaAgrupado): void {
-    if (!pedido.ordenesIds.length || this.procesandoPedidoId()) {
-      return;
-    }
+  private filtrarVisibles(ordenes: OrdenCocinaResponse[]): OrdenCocinaResponse[] {
+    return ordenes.filter((orden) => {
+      const esBebida = orden.plato?.categoria === 'Bebida';
+      const estadoVisible =
+        orden.ordenEstado === 'Pendiente' ||
+        orden.ordenEstado === 'Preparación' ||
+        orden.ordenEstado === 'Listo';
 
-    this.procesandoPedidoId.set(pedido.pedidoId);
-    this.error.set(null);
-    this.pausarSincronizacion(this.refreshAfterWriteMs + 500);
+      const cuentaPagada = orden.pedido?.cuenta?.payed === true;
 
-    const accion =
-      pedido.estado === 'listo'
-        ? this.ordenesApi.marcarEnPreparacion.bind(this.ordenesApi)
-        : this.ordenesApi.marcarPendiente.bind(this.ordenesApi);
-
-    forkJoin(pedido.ordenesIds.map((id) => accion(id)))
-      .pipe(take(1))
-      .subscribe({
-        next: () => {
-          this.recargarConRetardo(this.refreshAfterWriteMs);
-        },
-        error: (error) => {
-          console.error(error);
-          this.error.set(
-            'No se pudo actualizar el estado del pedido de bebidas.',
-          );
-          this.recargarConRetardo(this.refreshAfterWriteMs);
-        },
-      });
+      return esBebida && estadoVisible && !cuentaPagada;
+    });
   }
 
-  tiempoPedido(pedido: PedidoBebidaAgrupado): string {
-    const fecha = new Date(pedido.fechaPedido).getTime();
-    if (Number.isNaN(fecha)) {
-      return '';
-    }
+  private diferenciaEnMinutos(fechaIso: string): number {
+    const fecha = new Date(fechaIso).getTime();
+    if (Number.isNaN(fecha)) return 0;
 
-    const mins = Math.max(0, Math.floor((Date.now() - fecha) / 60000));
-    if (mins < 1) {
-      return '< 1 min';
-    }
-    if (mins < 60) {
-      return `${mins} min`;
-    }
+    return Math.max(0, Math.floor((this.ahora() - fecha) / 60000));
+  }
 
-    const horas = Math.floor(mins / 60);
-    const resto = mins % 60;
-    return resto === 0 ? `${horas} h` : `${horas} h ${resto} min`;
+  private extraerMesaDesdeTexto(texto?: string | null): string | null {
+    if (!texto) return null;
+    const match = texto.match(/\bmesa\s*[:#-]?\s*(\d+)\b/i);
+    return match?.[1] ?? null;
   }
 
   private pausarSincronizacion(ms: number): void {
@@ -210,126 +281,6 @@ export class BebidasComponent {
   }
 
   private recargarConRetardo(ms: number): void {
-    window.setTimeout(() => {
-      this.recargar();
-    }, ms);
-  }
-
-  private recargar(): void {
-    this.ordenesApi
-      .obtenerPendientesBarra()
-      .pipe(take(1))
-      .subscribe({
-        next: () => {
-          combineLatest([
-            this.ordenesApi.obtenerPendientesBarra(),
-            this.ordenesApi.obtenerEnPreparacionBarra(),
-            this.ordenesApi.obtenerListasBarra(),
-          ])
-            .pipe(take(1))
-            .subscribe({
-              next: ([pendientes, enPreparacion, listas]) => {
-                const todas = [...pendientes, ...enPreparacion, ...listas];
-                this.pedidos.set(this.agruparPorPedido(todas));
-                this.cargando.set(false);
-                this.error.set(null);
-                this.procesandoPedidoId.set(null);
-              },
-              error: (error) => {
-                console.error(error);
-                this.error.set('No se pudieron recargar las bebidas.');
-                this.cargando.set(false);
-                this.procesandoPedidoId.set(null);
-              },
-            });
-        },
-        error: (error) => {
-          console.error(error);
-          this.error.set('No se pudieron recargar las bebidas.');
-          this.cargando.set(false);
-          this.procesandoPedidoId.set(null);
-        },
-      });
-  }
-
-  private agruparPorPedido(
-    ordenes: OrdenCocinaResponse[],
-  ): PedidoBebidaAgrupado[] {
-    const visibles = ordenes.filter((orden) => {
-      const esBebida = orden.plato?.categoria === 'Bebida';
-      const cuentaPagada = orden.pedido?.cuenta?.payed === true;
-      return esBebida && !cuentaPagada;
-    });
-
-    const mapa = new Map<string, PedidoBebidaAgrupado>();
-
-    for (const orden of visibles) {
-      const pedidoId = orden.pedido?.id;
-      if (!pedidoId) {
-        continue;
-      }
-
-      const cuentaId = orden.pedido?.cuenta?.id ?? '';
-      const mesaId =
-        orden.pedido?.cuenta?.mesas?.[0]?.id?.toString?.() ??
-        String(orden.pedido?.cuenta?.mesas?.[0]?.id ?? 'Sin asignar');
-
-      const estado = this.mapearEstado(orden.ordenEstado);
-
-      if (!mapa.has(pedidoId)) {
-        mapa.set(pedidoId, {
-          pedidoId,
-          cuentaId,
-          mesaId,
-          fechaPedido: orden.pedido?.fechaPedido ?? orden.fecha,
-          estado,
-          ordenesIds: [],
-          items: [],
-          totalItems: 0,
-        });
-      }
-
-      const grupo = mapa.get(pedidoId)!;
-
-      grupo.ordenesIds.push(orden.id);
-      grupo.totalItems += 1;
-
-      if (estado === 'pendiente') {
-        grupo.estado = 'pendiente';
-      } else if (estado === 'preparando' && grupo.estado !== 'pendiente') {
-        grupo.estado = 'preparando';
-      }
-
-      const existente = grupo.items.find(
-        (item) => item.nombre === orden.plato.nombre,
-      );
-
-      if (existente) {
-        existente.cantidad += 1;
-      } else {
-        grupo.items.push({
-          nombre: orden.plato.nombre,
-          cantidad: 1,
-        });
-      }
-    }
-
-    return Array.from(mapa.values()).map((pedido) => ({
-      ...pedido,
-      items: [...pedido.items].sort((a, b) => a.nombre.localeCompare(b.nombre)),
-    }));
-  }
-
-  private mapearEstado(estado: EstadoOrdenBackend): EstadoVisualPedido {
-    switch (estado) {
-      case 'Pendiente':
-        return 'pendiente';
-      case 'Preparación':
-        return 'preparando';
-      case 'Listo':
-        return 'listo';
-      default:
-        return 'pendiente';
-    }
+    window.setTimeout(() => this.cargarBebidas(false), ms);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -14,26 +14,26 @@ import { TableSessionService } from '../../../services/table-session.service';
   styleUrls: ['./table-login.css'],
 })
 export class TableLogin implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private fb = inject(FormBuilder);
-  private mesasApiService = inject(MesasApiService);
-  private tableSessionService = inject(TableSessionService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly fb = inject(FormBuilder);
+  private readonly mesasApiService = inject(MesasApiService);
+  private readonly tableSessionService = inject(TableSessionService);
 
-  tableId = signal<string | null>(null);
-  errorMessage = signal<string | null>(null);
-  isLoading = signal(false);
+  readonly tableId = signal<string | null>(null);
+  readonly errorMessage = signal<string | null>(null);
+  readonly isLoading = signal(false);
 
-  loginForm = this.fb.group({
+  readonly loginForm = this.fb.group({
     password: ['', [Validators.required]],
   });
 
-  ngOnInit() {
+  ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     this.tableId.set(id);
   }
 
-  onSubmit() {
+  onSubmit(): void {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
@@ -53,9 +53,7 @@ export class TableLogin implements OnInit {
     this.mesasApiService.validarAccesoMesa(mesaId, password).subscribe({
       next: (response) => {
         this.isLoading.set(false);
-
         this.tableSessionService.guardarSesion(response.mesaId, response.cuentaId);
-
         this.router.navigate(['/menu', mesaId]);
       },
       error: (error: HttpErrorResponse) => {
