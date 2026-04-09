@@ -5,6 +5,7 @@ import {
   OrdenCocinaResponse,
   OrdenesApiService,
 } from '../../services/ordenes-api.service';
+import {NavbarComponent} from '../../components/navbar/navbar';
 
 type ResultadoCarga = {
   ok: boolean;
@@ -14,7 +15,7 @@ type ResultadoCarga = {
 @Component({
   selector: 'app-bebidas',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NavbarComponent],
   templateUrl: './bebidas.html',
   styleUrl: './bebidas.css',
 })

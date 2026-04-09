@@ -6,11 +6,12 @@ import {
   OrdenCocinaResponse,
   OrdenesApiService,
 } from '../../services/ordenes-api.service';
+import {NavbarComponent} from '../../components/navbar/navbar';
 
 @Component({
   selector: 'app-platos',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NavbarComponent],
   templateUrl: './platos.html',
   styleUrl: './platos.css',
 })
