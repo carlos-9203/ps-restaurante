@@ -67,6 +67,12 @@ export class OrdenesApiService {
     );
   }
 
+  obtenerPlatosSala(): Observable<OrdenCocinaResponse[]> {
+    return this.http.get<OrdenCocinaResponse[]>(
+      `${this.apiUrl}/ordenes/sala/platos`,
+    );
+  }
+
   obtenerPendientesBarra(): Observable<OrdenCocinaResponse[]> {
     return this.http.get<OrdenCocinaResponse[]>(
       `${this.apiUrl}/ordenes/barra/pendientes`,

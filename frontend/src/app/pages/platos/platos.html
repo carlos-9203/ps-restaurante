@@ -4,21 +4,22 @@
   <header class="header-platos">
     <div>
       <p class="eyebrow">Sala / Camareros</p>
-      <h1>Platos listos para servir</h1>
+      <h1>Platos pendientes de servir</h1>
       <p class="subtitulo">
-        Se muestran solo órdenes de cocina en estado listo, ocultando cuentas ya pagadas.
+        Aquí se muestran los platos de cocina que están listos o ya entregados,
+        y solo desaparecen cuando la cuenta queda pagada.
       </p>
     </div>
 
     <div class="contador-listos">
       <span class="dot verde"></span>
-      <span>{{ listasCount() }} listas</span>
+      <span>{{ pendientesDeEntregaCount() }} pendientes</span>
     </div>
   </header>
 
   @if (cargando()) {
     <div class="estado-vacio">
-      <p>Cargando platos listos...</p>
+      <p>Cargando platos de sala...</p>
     </div>
   } @else if (error()) {
     <div class="estado-vacio error">
@@ -26,12 +27,12 @@
     </div>
   } @else if (ordenesOrdenadas().length === 0) {
     <div class="estado-vacio">
-      <p>No hay platos listos para servir.</p>
+      <p>No hay platos visibles en sala.</p>
     </div>
   } @else {
     <div class="lista-ordenes">
       @for (orden of ordenesOrdenadas(); track orden.id) {
-        <article class="orden-card">
+        <article class="orden-card" [class.entregada]="yaEntregada(orden)">
           <div class="bloque-mesa">
             <span class="indicador-color"></span>
 
@@ -43,7 +44,9 @@
 
           <div class="bloque-contenido">
             <div class="info-superior">
-              <span class="pildora-estado">LISTO</span>
+              <span class="pildora-estado" [class.pildora-entregada]="yaEntregada(orden)">
+                {{ etiquetaEstado(orden) }}
+              </span>
               <span class="dato-secundario">{{ categoriaCorta(orden.plato.categoria) }}</span>
               <span class="dato-secundario">Pedido {{ pedidoIdDeOrden(orden) }}</span>
             </div>
@@ -61,10 +64,16 @@
             <button
               class="btn-entregar"
               type="button"
-              [disabled]="procesandoOrdenId() === orden.id"
+              [disabled]="procesandoOrdenId() === orden.id || yaEntregada(orden)"
               (click)="entregarOrden(orden)"
             >
-              {{ procesandoOrdenId() === orden.id ? 'ENTREGANDO...' : 'ENTREGAR' }}
+              {{
+                procesandoOrdenId() === orden.id
+                  ? 'ENTREGANDO...'
+                  : yaEntregada(orden)
+                    ? 'ENTREGADO'
+                    : 'ENTREGAR'
+              }}
             </button>
           </div>
         </article>

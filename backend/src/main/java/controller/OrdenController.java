@@ -56,6 +56,10 @@ public class OrdenController {
                     path("listas", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesBarraListas())));
                 });
 
+                path("sala", () -> {
+                    path("platos", () -> get(ctx -> ctx.json(applicationService.obtenerOrdenesSalaPlatos())));
+                });
+
                 path("pedido/{pedidoId}", () -> {
                     get(ctx -> {
                         String pedidoId = ctx.pathParam("pedidoId");

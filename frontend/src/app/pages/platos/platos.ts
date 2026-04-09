@@ -41,7 +41,9 @@ export class PlatosComponent {
     }),
   );
 
-  readonly listasCount = computed(() => this.ordenes().length);
+  readonly pendientesDeEntregaCount = computed(
+    () => this.ordenes().filter((orden) => orden.ordenEstado !== 'Entregado').length,
+  );
 
   constructor() {
     interval(this.pollingMs)
@@ -52,10 +54,10 @@ export class PlatosComponent {
             return of(null);
           }
 
-          return this.ordenesApi.obtenerListasCocina().pipe(
+          return this.ordenesApi.obtenerPlatosSala().pipe(
             catchError((error) => {
               console.error(error);
-              this.error.set('No se pudieron cargar los platos listos.');
+              this.error.set('No se pudieron cargar los platos de sala.');
               this.cargando.set(false);
               return of([] as OrdenCocinaResponse[]);
             }),
@@ -81,7 +83,7 @@ export class PlatosComponent {
   }
 
   entregarOrden(orden: OrdenCocinaResponse): void {
-    if (this.procesandoOrdenId()) {
+    if (this.procesandoOrdenId() || orden.ordenEstado === 'Entregado') {
       return;
     }
 
@@ -153,6 +155,10 @@ export class PlatosComponent {
     }
   }
 
+  etiquetaEstado(orden: OrdenCocinaResponse): string {
+    return orden.ordenEstado === 'Entregado' ? 'ENTREGADO' : 'LISTO';
+  }
+
   detallesVisibles(orden: OrdenCocinaResponse): string {
     const detalles = orden.detalles?.trim();
     return detalles && detalles.length > 0 ? detalles : 'Sin detalles adicionales';
@@ -160,6 +166,25 @@ export class PlatosComponent {
 
   tiempoLista(orden: OrdenCocinaResponse): string {
     const diffMin = this.diferenciaEnMinutos(orden.fecha);
+
+    if (orden.ordenEstado === 'Entregado') {
+      if (diffMin < 1) {
+        return 'Entregado hace < 1 min';
+      }
+
+      if (diffMin < 60) {
+        return `Entregado hace ${diffMin} min`;
+      }
+
+      const horas = Math.floor(diffMin / 60);
+      const minutosRestantes = diffMin % 60;
+
+      if (minutosRestantes === 0) {
+        return `Entregado hace ${horas} h`;
+      }
+
+      return `Entregado hace ${horas} h ${minutosRestantes} min`;
+    }
 
     if (diffMin < 1) {
       return 'Lista hace < 1 min';
@@ -183,13 +208,18 @@ export class PlatosComponent {
     return orden.pedido?.id ?? 'Sin pedido';
   }
 
+  yaEntregada(orden: OrdenCocinaResponse): boolean {
+    return orden.ordenEstado === 'Entregado';
+  }
+
   private filtrarVisibles(ordenes: OrdenCocinaResponse[]): OrdenCocinaResponse[] {
     return ordenes.filter((orden) => {
       const esComida = orden.plato?.categoria !== 'Bebida';
-      const estaLista = orden.ordenEstado === 'Listo';
+      const estaVisibleEnSala =
+        orden.ordenEstado === 'Listo' || orden.ordenEstado === 'Entregado';
       const cuentaPagada = orden.pedido?.cuenta?.payed === true;
 
-      return esComida && estaLista && !cuentaPagada;
+      return esComida && estaVisibleEnSala && !cuentaPagada;
     });
   }
 
@@ -209,18 +239,18 @@ export class PlatosComponent {
 
   private recargar(): void {
     this.ordenesApi
-      .obtenerListasCocina()
+      .obtenerPlatosSala()
       .pipe(take(1))
       .subscribe({
-        next: (listas) => {
-          this.ordenes.set(this.filtrarVisibles(listas));
+        next: (ordenes) => {
+          this.ordenes.set(this.filtrarVisibles(ordenes));
           this.cargando.set(false);
           this.error.set(null);
           this.procesandoOrdenId.set(null);
         },
         error: (error) => {
           console.error(error);
-          this.error.set('No se pudieron recargar los platos listos.');
+          this.error.set('No se pudieron recargar los platos de sala.');
           this.procesandoOrdenId.set(null);
         },
       });

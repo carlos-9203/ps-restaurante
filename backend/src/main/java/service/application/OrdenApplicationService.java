@@ -163,6 +163,25 @@ public class OrdenApplicationService {
         return obtenerOrdenesBarraPorEstado(OrdenEstado.Listo);
     }
 
+    public List<Orden> obtenerOrdenesSalaPlatos() {
+        return ordenRepository.findAll().stream()
+                .map(this::hidratarOrden)
+                .filter(orden -> orden.plato() != null)
+                .filter(orden -> orden.plato().categoria() != null)
+                .filter(orden -> orden.plato().categoria() != Categoria.Bebida)
+                .filter(orden ->
+                        orden.ordenEstado() == OrdenEstado.Listo
+                                || orden.ordenEstado() == OrdenEstado.Entregado
+                )
+                .filter(this::cuentaNoPagada)
+                .sorted((a, b) -> {
+                    Instant fechaPedidoA = a.pedido() != null ? a.pedido().fechaPedido() : a.fecha();
+                    Instant fechaPedidoB = b.pedido() != null ? b.pedido().fechaPedido() : b.fecha();
+                    return fechaPedidoA.compareTo(fechaPedidoB);
+                })
+                .toList();
+    }
+
     public Orden marcarOrdenPendiente(String ordenId) {
         Orden orden = obtenerOrdenPorId(ordenId);
 
@@ -276,11 +295,20 @@ public class OrdenApplicationService {
     }
 
     private boolean cuentaNoPagada(Orden orden) {
-        if (orden == null || orden.pedido() == null || orden.pedido().cuenta() == null) {
+        if (orden == null) {
+            return false;
+        }
+
+        Orden ordenHidratada = hidratarOrden(orden);
+
+        if (ordenHidratada == null
+                || ordenHidratada.pedido() == null
+                || ordenHidratada.pedido().cuenta() == null) {
             return true;
         }
 
-        return !orden.pedido().cuenta().payed();
+        Cuenta cuenta = ordenHidratada.pedido().cuenta();
+        return !cuenta.payed();
     }
 
     private Orden hidratarOrden(Orden orden) {
@@ -324,13 +352,6 @@ public class OrdenApplicationService {
 
     private Cuenta hidratarCuenta(Cuenta cuentaBase) {
         if (cuentaBase == null || cuentaBase.id() == null) {
-            return cuentaBase;
-        }
-
-        boolean tieneMesas = cuentaBase.mesas() != null && !cuentaBase.mesas().isEmpty();
-        boolean tienePassword = cuentaBase.password() != null;
-
-        if (tieneMesas && tienePassword) {
             return cuentaBase;
         }
 
