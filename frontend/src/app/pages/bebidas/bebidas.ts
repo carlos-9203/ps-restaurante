@@ -1,5 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NavbarComponent } from '../../components/navbar/navbar';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { combineLatest, forkJoin, interval, of } from 'rxjs';
 import { catchError, startWith, switchMap, take } from 'rxjs/operators';
@@ -31,7 +32,7 @@ interface PedidoBebidaAgrupado {
 @Component({
   selector: 'app-bebidas',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NavbarComponent],
   templateUrl: './bebidas.html',
   styleUrl: './bebidas.css',
 })

@@ -4,11 +4,12 @@ import { MesaCardComponent } from '../../components/mesa-card/mesa-card';
 import { MesaDetalleComponent } from '../../components/mesa-detalle/mesa-detalle';
 import { Mesa, ZonaMesa } from '../../models/mesa.model';
 import { MesasApiService } from '../../services/mesas-api.service';
+import {NavbarComponent} from '../../components/navbar/navbar';
 
 @Component({
   selector: 'app-mesas',
   standalone: true,
-  imports: [CommonModule, MesaCardComponent, MesaDetalleComponent],
+  imports: [CommonModule, MesaCardComponent, MesaDetalleComponent, NavbarComponent],
   templateUrl: './mesas.html',
   styleUrl: './mesas.css',
 })
