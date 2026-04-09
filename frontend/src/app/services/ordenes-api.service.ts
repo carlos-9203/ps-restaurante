@@ -2,8 +2,17 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export type EstadoOrdenBackend = 'Pendiente' | 'Preparación' | 'Listo';
-export type CategoriaPlatoBackend = 'Bebida' | 'Entrante' | 'Principal' | 'Postre';
+export type EstadoOrdenBackend =
+  | 'Pendiente'
+  | 'Preparación'
+  | 'Listo'
+  | 'Entregado';
+
+export type CategoriaPlatoBackend =
+  | 'Bebida'
+  | 'Entrante'
+  | 'Principal'
+  | 'Postre';
 
 export interface OrdenCocinaResponse {
   id: string;
@@ -93,6 +102,13 @@ export class OrdenesApiService {
   marcarLista(ordenId: string): Observable<OrdenCocinaResponse> {
     return this.http.post<OrdenCocinaResponse>(
       `${this.apiUrl}/ordenes/${ordenId}/lista`,
+      {},
+    );
+  }
+
+  marcarEntregada(ordenId: string): Observable<OrdenCocinaResponse> {
+    return this.http.post<OrdenCocinaResponse>(
+      `${this.apiUrl}/ordenes/${ordenId}/entregada`,
       {},
     );
   }

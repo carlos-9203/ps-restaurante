@@ -1,0 +1,74 @@
+<app-navbar></app-navbar>
+
+<section class="platos-page">
+  <header class="header-platos">
+    <div>
+      <p class="eyebrow">Sala / Camareros</p>
+      <h1>Platos listos para servir</h1>
+      <p class="subtitulo">
+        Se muestran solo órdenes de cocina en estado listo, ocultando cuentas ya pagadas.
+      </p>
+    </div>
+
+    <div class="contador-listos">
+      <span class="dot verde"></span>
+      <span>{{ listasCount() }} listas</span>
+    </div>
+  </header>
+
+  @if (cargando()) {
+    <div class="estado-vacio">
+      <p>Cargando platos listos...</p>
+    </div>
+  } @else if (error()) {
+    <div class="estado-vacio error">
+      <p>{{ error() }}</p>
+    </div>
+  } @else if (ordenesOrdenadas().length === 0) {
+    <div class="estado-vacio">
+      <p>No hay platos listos para servir.</p>
+    </div>
+  } @else {
+    <div class="lista-ordenes">
+      @for (orden of ordenesOrdenadas(); track orden.id) {
+        <article class="orden-card">
+          <div class="bloque-mesa">
+            <span class="indicador-color"></span>
+
+            <div class="mesa-texto">
+              <span>MESA</span>
+              <strong>{{ numeroMesaPlano(orden) }}</strong>
+            </div>
+          </div>
+
+          <div class="bloque-contenido">
+            <div class="info-superior">
+              <span class="pildora-estado">LISTO</span>
+              <span class="dato-secundario">{{ categoriaCorta(orden.plato.categoria) }}</span>
+              <span class="dato-secundario">Pedido {{ pedidoIdDeOrden(orden) }}</span>
+            </div>
+
+            <h2 class="titulo-plato">{{ orden.plato.nombre }}</h2>
+
+            <p class="mesa-destino">{{ mesaDeOrden(orden) }}</p>
+
+            <p class="detalle-plato">{{ detallesVisibles(orden) }}</p>
+
+            <p class="tiempo-listo">{{ tiempoLista(orden) }}</p>
+          </div>
+
+          <div class="bloque-accion">
+            <button
+              class="btn-entregar"
+              type="button"
+              [disabled]="procesandoOrdenId() === orden.id"
+              (click)="entregarOrden(orden)"
+            >
+              {{ procesandoOrdenId() === orden.id ? 'ENTREGANDO...' : 'ENTREGAR' }}
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

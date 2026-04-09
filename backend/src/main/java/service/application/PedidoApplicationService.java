@@ -89,6 +89,7 @@ public class PedidoApplicationService {
         );
 
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
+
         List<Orden> ordenesCreadas = new ArrayList<>();
 
         try {
@@ -96,7 +97,9 @@ public class PedidoApplicationService {
                 validarItem(item);
 
                 Plato plato = platoRepository.findById(item.platoId)
-                        .orElseThrow(() -> new IllegalArgumentException("El plato con id " + item.platoId + " no existe"));
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "El plato con id " + item.platoId + " no existe"
+                        ));
 
                 if (!plato.estaActivo()) {
                     throw new IllegalArgumentException("El plato " + plato.nombre() + " no está disponible");
@@ -159,13 +162,14 @@ public class PedidoApplicationService {
                 .filter(orden -> orden.pedido().id().equals(pedido.id()))
                 .toList();
 
-        boolean todasListas = !ordenes.isEmpty() &&
-                ordenes.stream().allMatch(o -> o.ordenEstado() == OrdenEstado.Listo);
+        boolean todasListasOEntregadas = !ordenes.isEmpty() && ordenes.stream().allMatch(o ->
+                o.ordenEstado() == OrdenEstado.Listo || o.ordenEstado() == OrdenEstado.Entregado
+        );
 
         Pedido actualizado = new Pedido(
                 pedido.id(),
                 pedido.cuenta(),
-                todasListas ? PedidoEstado.Listo : PedidoEstado.Pendiente,
+                todasListasOEntregadas ? PedidoEstado.Listo : PedidoEstado.Pendiente,
                 pedido.fechaPedido()
         );
 

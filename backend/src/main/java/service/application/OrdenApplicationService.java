@@ -99,6 +99,7 @@ public class OrdenApplicationService {
     public Orden obtenerOrdenPorId(String ordenId) {
         Orden orden = ordenRepository.findById(ordenId)
                 .orElseThrow(() -> new IllegalArgumentException("La orden no existe"));
+
         return hidratarOrden(orden);
     }
 
@@ -219,9 +220,31 @@ public class OrdenApplicationService {
         return hidratarOrden(guardada);
     }
 
+    public Orden marcarOrdenEntregada(String ordenId) {
+        Orden orden = obtenerOrdenPorId(ordenId);
+
+        Orden actualizada = new Orden(
+                orden.id(),
+                orden.pedido(),
+                orden.plato(),
+                orden.precio(),
+                OrdenEstado.Entregado,
+                orden.fecha(),
+                orden.detalles()
+        );
+
+        Orden guardada = ordenRepository.update(orden.id(), actualizada);
+        pedidoApplicationService.recalcularEstadoPedido(orden.pedido().id());
+
+        return hidratarOrden(guardada);
+    }
+
     public boolean estanTodasListasLasOrdenes(String pedidoId) {
         List<Orden> ordenes = obtenerOrdenesDePedido(pedidoId);
-        return !ordenes.isEmpty() && ordenes.stream().allMatch(orden -> orden.ordenEstado() == OrdenEstado.Listo);
+
+        return !ordenes.isEmpty() && ordenes.stream().allMatch(orden ->
+                orden.ordenEstado() == OrdenEstado.Listo || orden.ordenEstado() == OrdenEstado.Entregado
+        );
     }
 
     private List<Orden> obtenerOrdenesCocinaPorEstado(OrdenEstado estado) {
@@ -253,18 +276,11 @@ public class OrdenApplicationService {
     }
 
     private boolean cuentaNoPagada(Orden orden) {
-        if (orden == null) {
-            return false;
-        }
-
-        Orden ordenHidratada = hidratarOrden(orden);
-
-        if (ordenHidratada.pedido() == null || ordenHidratada.pedido().cuenta() == null) {
+        if (orden == null || orden.pedido() == null || orden.pedido().cuenta() == null) {
             return true;
         }
 
-        Cuenta cuenta = ordenHidratada.pedido().cuenta();
-        return !cuenta.payed();
+        return !orden.pedido().cuenta().payed();
     }
 
     private Orden hidratarOrden(Orden orden) {
@@ -311,10 +327,18 @@ public class OrdenApplicationService {
             return cuentaBase;
         }
 
+        boolean tieneMesas = cuentaBase.mesas() != null && !cuentaBase.mesas().isEmpty();
+        boolean tienePassword = cuentaBase.password() != null;
+
+        if (tieneMesas && tienePassword) {
+            return cuentaBase;
+        }
+
         if (cuentaRepository == null) {
             return cuentaBase;
         }
 
-        return cuentaRepository.findById(cuentaBase.id()).orElse(cuentaBase);
+        Optional<Cuenta> cuentaOpt = cuentaRepository.findById(cuentaBase.id());
+        return cuentaOpt.orElse(cuentaBase);
     }
 }
