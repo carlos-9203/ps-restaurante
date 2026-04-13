@@ -213,11 +213,17 @@
 .modal-cobro {
   width: 100%;
   max-width: 420px;
+  max-height: 85vh;
+  overflow: hidden;
+
   background: #f7f7f7;
   border-radius: 18px;
   padding: 22px 20px 18px;
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
   animation: modalEntrando 0.18s ease;
+
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes modalEntrando {
@@ -383,4 +389,118 @@
   text-align: center !important;
   white-space: nowrap !important;
   pointer-events: none !important;
+}
+
+/* =========================
+   SCROLL INTERNO DEL MODAL
+========================= */
+
+.modal-resumen {
+  margin: 0 0 14px 0;
+  background: #ffffff;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 14px 16px;
+
+  flex: 1 1 auto;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-resumen h4 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
+
+.modal-resumen-vacio {
+  margin: 0;
+  color: #666666;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.modal-resumen-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  overflow-y: auto;
+  min-height: 0;
+  max-height: 40vh;
+  padding-right: 6px;
+}
+
+.modal-resumen-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ececec;
+}
+
+.modal-resumen-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.modal-resumen-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.modal-resumen-item__info strong {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #1f1f1f;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.modal-resumen-item__meta {
+  font-size: 0.88rem;
+  color: #5f5f5f;
+  line-height: 1.3;
+}
+
+.modal-resumen-item__estado {
+  font-size: 0.8rem;
+  color: #7a7a7a;
+  line-height: 1.3;
+}
+
+.modal-resumen-item__subtotal {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111111;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+/* Scroll bonito */
+.modal-resumen-lista::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-resumen-lista::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 999px;
+}
+
+.modal-resumen-lista::-webkit-scrollbar-thumb {
+  background: #c8c8c8;
+  border-radius: 999px;
+}
+
+.modal-resumen-lista::-webkit-scrollbar-thumb:hover {
+  background: #b3b3b3;
 }

@@ -1,10 +1,27 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
+
 import { MesaCardComponent } from '../../components/mesa-card/mesa-card';
 import { MesaDetalleComponent } from '../../components/mesa-detalle/mesa-detalle';
+import { NavbarComponent } from '../../components/navbar/navbar';
+
 import { Mesa, ZonaMesa } from '../../models/mesa.model';
 import { MesasApiService } from '../../services/mesas-api.service';
-import {NavbarComponent} from '../../components/navbar/navbar';
+import {
+  CuentaApiService,
+  OrdenCuentaResponse,
+} from '../../services/cuenta-api.service';
+
+interface ItemCobroAgrupado {
+  platoId: string;
+  nombre: string;
+  categoria: string;
+  precioUnitario: number;
+  cantidad: number;
+  subtotal: number;
+  estados: string[];
+}
 
 @Component({
   selector: 'app-mesas',
@@ -15,6 +32,7 @@ import {NavbarComponent} from '../../components/navbar/navbar';
 })
 export class MesasComponent {
   private readonly mesasApi = inject(MesasApiService);
+  private readonly cuentaApi = inject(CuentaApiService);
 
   readonly zona = signal<ZonaMesa>('interior');
   readonly mesaSeleccionada = signal<Mesa | null>(null);
@@ -29,6 +47,8 @@ export class MesasComponent {
   readonly totalCobro = signal<number | null>(null);
   readonly cargandoCobro = signal(false);
   readonly procesandoCobro = signal(false);
+
+  readonly resumenCobro = signal<ItemCobroAgrupado[]>([]);
 
   readonly mesasActuales = computed(() =>
     this.mesas()
@@ -74,15 +94,20 @@ export class MesasComponent {
     this.mesaCobroId.set(payload.mesaId);
     this.cuentaCobroId.set(payload.cuentaId);
     this.totalCobro.set(null);
+    this.resumenCobro.set([]);
     this.mostrarModalCobro.set(true);
 
-    this.mesasApi.obtenerTotalCuenta(payload.cuentaId).subscribe({
-      next: (respuesta) => {
-        this.totalCobro.set(Number(respuesta.importe));
+    forkJoin({
+      total: this.mesasApi.obtenerTotalCuenta(payload.cuentaId),
+      ordenes: this.cuentaApi.obtenerOrdenesDeCuenta(payload.cuentaId),
+    }).subscribe({
+      next: ({ total, ordenes }) => {
+        this.totalCobro.set(Number(total.importe));
+        this.resumenCobro.set(this.agruparOrdenes(ordenes));
         this.cargandoCobro.set(false);
       },
       error: (err) => {
-        console.error('Error obteniendo total de la cuenta:', err);
+        console.error('Error obteniendo datos del cobro:', err);
         this.cargandoCobro.set(false);
         this.cerrarModalCobro();
         this.error.set(this.extraerMensaje(err));
@@ -124,6 +149,49 @@ export class MesasComponent {
     this.cuentaCobroId.set(null);
     this.mesaCobroId.set(null);
     this.totalCobro.set(null);
+    this.resumenCobro.set([]);
+  }
+
+  obtenerResumenEstado(estados: string[]): string {
+    const estadosNormalizados = estados.map((estado) => {
+      if (estado === 'Preparación' || estado === 'Preparacion') {
+        return 'En preparación';
+      }
+      return estado;
+    });
+
+    const unicos = Array.from(new Set(estadosNormalizados));
+    return unicos.join(' · ');
+  }
+
+  private agruparOrdenes(ordenes: OrdenCuentaResponse[]): ItemCobroAgrupado[] {
+    const mapa = new Map<string, ItemCobroAgrupado>();
+
+    for (const orden of ordenes) {
+      const plato = orden.plato;
+      const key = plato.id;
+
+      if (!mapa.has(key)) {
+        mapa.set(key, {
+          platoId: plato.id,
+          nombre: plato.nombre,
+          categoria: plato.categoria,
+          precioUnitario: Number(orden.precio),
+          cantidad: 0,
+          subtotal: 0,
+          estados: [],
+        });
+      }
+
+      const item = mapa.get(key)!;
+      item.cantidad += 1;
+      item.subtotal += Number(orden.precio);
+      item.estados.push(orden.ordenEstado);
+    }
+
+    return Array.from(mapa.values()).sort((a, b) =>
+      a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
+    );
   }
 
   private recargarMesas(mesaAReseleccionar?: string): void {
@@ -163,13 +231,12 @@ export class MesasComponent {
     const err = error as { error?: { message?: string } };
     return err?.error?.message ?? 'Ha ocurrido un error al comunicar con el backend';
   }
-  cerrarSeleccion(event: MouseEvent) {
+
+  cerrarSeleccion(event: MouseEvent): void {
     const target = event.target as HTMLElement;
 
-    // Si el clic NO es en una mesa Y NO es en el panel de detalles
     if (!target.closest('app-mesa-card') && !target.closest('.sidebar-detalle')) {
       this.mesaSeleccionada.set(null);
     }
   }
-
 }
