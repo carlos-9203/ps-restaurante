@@ -1,5 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, computed, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 
 import { MesaCardComponent } from '../../components/mesa-card/mesa-card';
@@ -7,11 +7,8 @@ import { MesaDetalleComponent } from '../../components/mesa-detalle/mesa-detalle
 import { NavbarComponent } from '../../components/navbar/navbar';
 
 import { Mesa, ZonaMesa } from '../../models/mesa.model';
+import { CuentaApiService, OrdenCuentaResponse } from '../../services/cuenta-api.service';
 import { MesasApiService } from '../../services/mesas-api.service';
-import {
-  CuentaApiService,
-  OrdenCuentaResponse,
-} from '../../services/cuenta-api.service';
 
 interface ItemCobroAgrupado {
   platoId: string;
@@ -50,12 +47,54 @@ export class MesasComponent {
 
   readonly resumenCobro = signal<ItemCobroAgrupado[]>([]);
   readonly metodoPago = signal<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
+  readonly importeRecibido = signal<number | null>(null);
 
   readonly mesasActuales = computed(() =>
     this.mesas()
       .filter((mesa) => mesa.zona === this.zona())
       .sort((a, b) => Number(a.id) - Number(b.id))
   );
+
+  readonly cambioCobro = computed(() => {
+    const total = this.totalCobro();
+    const recibido = this.importeRecibido();
+
+    if (this.metodoPago() !== 'EFECTIVO' || total == null || recibido == null) {
+      return null;
+    }
+
+    return Number((recibido - total).toFixed(2));
+  });
+
+  readonly faltaCobro = computed(() => {
+    const total = this.totalCobro();
+    const recibido = this.importeRecibido();
+
+    if (this.metodoPago() !== 'EFECTIVO' || total == null || recibido == null) {
+      return null;
+    }
+
+    if (recibido >= total) {
+      return 0;
+    }
+
+    return Number((total - recibido).toFixed(2));
+  });
+
+  readonly puedeConfirmarCobro = computed(() => {
+    const total = this.totalCobro();
+
+    if (total == null || this.procesandoCobro()) {
+      return false;
+    }
+
+    if (this.metodoPago() === 'TARJETA') {
+      return true;
+    }
+
+    const recibido = this.importeRecibido();
+    return recibido != null && recibido >= total;
+  });
 
   constructor() {
     this.recargarMesas();
@@ -97,6 +136,7 @@ export class MesasComponent {
     this.totalCobro.set(null);
     this.resumenCobro.set([]);
     this.metodoPago.set('EFECTIVO');
+    this.importeRecibido.set(null);
     this.mostrarModalCobro.set(true);
 
     forkJoin({
@@ -104,8 +144,14 @@ export class MesasComponent {
       ordenes: this.cuentaApi.obtenerOrdenesDeCuenta(payload.cuentaId),
     }).subscribe({
       next: ({ total, ordenes }) => {
+        console.log('TOTAL CUENTA:', total);
+        console.log('ORDENES CUENTA:', ordenes);
+
         this.totalCobro.set(Number(total.importe));
         this.resumenCobro.set(this.agruparOrdenes(ordenes));
+
+        console.log('RESUMEN AGRUPADO:', this.resumenCobro());
+
         this.cargandoCobro.set(false);
       },
       error: (err) => {
@@ -122,7 +168,7 @@ export class MesasComponent {
     const mesaId = this.mesaCobroId();
     const metodoPago = this.metodoPago();
 
-    if (!cuentaId || !mesaId) {
+    if (!cuentaId || !mesaId || !this.puedeConfirmarCobro()) {
       return;
     }
 
@@ -154,6 +200,25 @@ export class MesasComponent {
     this.totalCobro.set(null);
     this.resumenCobro.set([]);
     this.metodoPago.set('EFECTIVO');
+    this.importeRecibido.set(null);
+  }
+
+  cambiarMetodoPago(metodo: 'EFECTIVO' | 'TARJETA'): void {
+    this.metodoPago.set(metodo);
+
+    if (metodo === 'TARJETA') {
+      this.importeRecibido.set(null);
+    }
+  }
+
+  actualizarImporteRecibido(valor: string): void {
+    if (valor.trim() === '') {
+      this.importeRecibido.set(null);
+      return;
+    }
+
+    const numero = Number(valor);
+    this.importeRecibido.set(Number.isNaN(numero) ? null : numero);
   }
 
   obtenerResumenEstado(estados: string[]): string {
@@ -173,24 +238,30 @@ export class MesasComponent {
 
     for (const orden of ordenes) {
       const plato = orden.plato;
-      const key = plato.id;
+      const platoId = plato?.id ?? `sin-id-${Math.random()}`;
+      const nombre = plato?.nombre?.trim() || 'Producto';
+      const categoria = plato?.categoria?.trim() || '';
+      const precioUnitario = Number(orden.precio ?? 0);
 
-      if (!mapa.has(key)) {
-        mapa.set(key, {
-          platoId: plato.id,
-          nombre: plato.nombre,
-          categoria: plato.categoria,
-          precioUnitario: Number(orden.precio),
+      if (!mapa.has(platoId)) {
+        mapa.set(platoId, {
+          platoId,
+          nombre,
+          categoria,
+          precioUnitario,
           cantidad: 0,
           subtotal: 0,
           estados: [],
         });
       }
 
-      const item = mapa.get(key)!;
+      const item = mapa.get(platoId)!;
       item.cantidad += 1;
-      item.subtotal += Number(orden.precio);
-      item.estados.push(orden.ordenEstado);
+      item.subtotal += precioUnitario;
+
+      if (orden.ordenEstado) {
+        item.estados.push(orden.ordenEstado);
+      }
     }
 
     return Array.from(mapa.values()).sort((a, b) =>
@@ -223,7 +294,7 @@ export class MesasComponent {
         this.mesaSeleccionada.set(mesaRefrescada);
       },
       error: (err) => {
-        console.error('Error recargar mesa:', err);
+        console.error('Error recargando mesas:', err);
         this.cargando.set(false);
         this.accionMesaId.set(null);
         this.error.set(this.extraerMensaje(err));
