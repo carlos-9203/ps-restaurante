@@ -504,3 +504,51 @@
 .modal-resumen-lista::-webkit-scrollbar-thumb:hover {
   background: #b3b3b3;
 }
+
+/* =========================
+   METODO DE PAGO
+========================= */
+
+.modal-metodo-pago {
+  margin: 0 0 14px 0;
+  background: #ffffff;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.modal-metodo-pago h4 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.modal-metodo-pago__opciones {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-metodo-pago__btn {
+  flex: 1;
+  height: 42px;
+  border: 1px solid #d9dee5;
+  background: #f4f6f8;
+  color: #243247;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.modal-metodo-pago__btn.active {
+  background: #cbbcad;
+  border-color: #c9bba8;
+  color: #2e2e2e;
+}
+
+.modal-metodo-pago__btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

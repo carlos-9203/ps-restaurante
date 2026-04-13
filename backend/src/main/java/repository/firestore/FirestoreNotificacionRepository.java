@@ -23,12 +23,13 @@ public class FirestoreNotificacionRepository extends AbstractFirestoreRepository
         if (cData != null) {
             cuenta = new Cuenta(
                     (String) cData.get("id"),
-                    List.<Mesa>of(),
+                    List.of(),
                     get(cData, "estaPagada", false),
-                    Optional.<Reserva>empty(),
+                    Optional.empty(),
                     toInstant(cData.get("fechaCreacion")),
-                    Optional.<Instant>empty(),
-                    cData.get("password") != null ? (String) cData.get("password") : ""
+                    Optional.empty(),
+                    cData.get("password") != null ? (String) cData.get("password") : "",
+                    Optional.empty()
             );
         }
 

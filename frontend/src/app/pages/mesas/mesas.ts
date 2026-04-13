@@ -49,6 +49,7 @@ export class MesasComponent {
   readonly procesandoCobro = signal(false);
 
   readonly resumenCobro = signal<ItemCobroAgrupado[]>([]);
+  readonly metodoPago = signal<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
 
   readonly mesasActuales = computed(() =>
     this.mesas()
@@ -95,6 +96,7 @@ export class MesasComponent {
     this.cuentaCobroId.set(payload.cuentaId);
     this.totalCobro.set(null);
     this.resumenCobro.set([]);
+    this.metodoPago.set('EFECTIVO');
     this.mostrarModalCobro.set(true);
 
     forkJoin({
@@ -118,6 +120,7 @@ export class MesasComponent {
   confirmarCobro(): void {
     const cuentaId = this.cuentaCobroId();
     const mesaId = this.mesaCobroId();
+    const metodoPago = this.metodoPago();
 
     if (!cuentaId || !mesaId) {
       return;
@@ -127,7 +130,7 @@ export class MesasComponent {
     this.procesandoCobro.set(true);
     this.accionMesaId.set(mesaId);
 
-    this.mesasApi.pagarCuentaCompleta(cuentaId).subscribe({
+    this.mesasApi.pagarCuentaCompleta(cuentaId, metodoPago).subscribe({
       next: () => {
         this.procesandoCobro.set(false);
         this.cerrarModalCobro();
@@ -150,6 +153,7 @@ export class MesasComponent {
     this.mesaCobroId.set(null);
     this.totalCobro.set(null);
     this.resumenCobro.set([]);
+    this.metodoPago.set('EFECTIVO');
   }
 
   obtenerResumenEstado(estados: string[]): string {

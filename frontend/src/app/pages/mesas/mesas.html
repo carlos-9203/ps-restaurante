@@ -82,7 +82,7 @@
         <h3>Confirmar cobro</h3>
 
         @if (cargandoCobro()) {
-          <p>Cargando resumen de la cuenta...</p>
+          <p class="modal-texto">Cargando resumen de la cuenta...</p>
         } @else {
           <p class="modal-texto">
             Se va a cobrar el total de la cuenta asociada a la mesa
@@ -118,6 +118,30 @@
                 }
               </div>
             }
+          </div>
+
+          <div class="modal-metodo-pago">
+            <h4>Método de pago</h4>
+
+            <div class="modal-metodo-pago__opciones">
+              <button
+                type="button"
+                class="modal-metodo-pago__btn"
+                [class.active]="metodoPago() === 'EFECTIVO'"
+                (click)="metodoPago.set('EFECTIVO')"
+                [disabled]="procesandoCobro()">
+                Efectivo
+              </button>
+
+              <button
+                type="button"
+                class="modal-metodo-pago__btn"
+                [class.active]="metodoPago() === 'TARJETA'"
+                (click)="metodoPago.set('TARJETA')"
+                [disabled]="procesandoCobro()">
+                Tarjeta
+              </button>
+            </div>
           </div>
 
           <div class="modal-total">

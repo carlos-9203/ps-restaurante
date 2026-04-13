@@ -1,8 +1,10 @@
 package controller;
 
 import dto.CuentaRequest;
+import dto.PagoCuentaRequest;
 import io.javalin.apibuilder.EndpointGroup;
 import model.Cuenta;
+import model.MetodoPago;
 import model.Orden;
 import model.Pedido;
 import service.CuentaService;
@@ -28,7 +30,6 @@ public class CuentaController {
     public EndpointGroup routes() {
         return () -> {
             path("cuentas", () -> {
-
                 post(ctx -> {
                     CuentaRequest request = ctx.bodyAsClass(CuentaRequest.class);
                     Cuenta creada = service.create(request);
@@ -38,7 +39,6 @@ public class CuentaController {
                 get(ctx -> ctx.json(service.findAll()));
 
                 path("{id}", () -> {
-
                     get(ctx -> {
                         String id = ctx.pathParam("id");
                         Optional<Cuenta> cuenta = service.findById(id);
@@ -105,8 +105,21 @@ public class CuentaController {
                     path("pagar-total", () -> {
                         post(ctx -> {
                             String id = ctx.pathParam("id");
-                            Cuenta cuenta = pagoApplicationService.pagarCuentaCompleta(id);
-                            ctx.json(cuenta);
+
+                            try {
+                                PagoCuentaRequest request = ctx.bodyAsClass(PagoCuentaRequest.class);
+
+                                if (request == null || request.metodoPago == null || request.metodoPago.isBlank()) {
+                                    ctx.status(400).json(new ApiError("El método de pago es obligatorio"));
+                                    return;
+                                }
+
+                                MetodoPago metodoPago = MetodoPago.valueOf(request.metodoPago.toUpperCase());
+                                Cuenta cuenta = pagoApplicationService.pagarCuentaCompleta(id, metodoPago);
+                                ctx.json(cuenta);
+                            } catch (IllegalArgumentException e) {
+                                ctx.status(400).json(new ApiError(e.getMessage()));
+                            }
                         });
                     });
 
@@ -122,9 +135,6 @@ public class CuentaController {
         };
     }
 
-    private record ImporteResponse(String cuentaId, BigDecimal importe) {
-    }
-
-    private record EstadoCuentaResponse(String cuentaId, boolean saldada) {
-    }
+    private record ImporteResponse(String cuentaId, BigDecimal importe) {}
+    private record EstadoCuentaResponse(String cuentaId, boolean saldada) {}
 }

@@ -1,6 +1,7 @@
 package service.application;
 
 import model.Cuenta;
+import model.MetodoPago;
 import model.Orden;
 import model.Pedido;
 import repository.interfaces.CuentaRepository;
@@ -73,11 +74,15 @@ public class PagoApplicationService {
         return calcularPendienteCuenta(cuentaId).compareTo(BigDecimal.ZERO) == 0;
     }
 
-    public Cuenta pagarCuentaCompleta(String cuentaId) {
+    public Cuenta pagarCuentaCompleta(String cuentaId, MetodoPago metodoPago) {
         Cuenta cuenta = obtenerCuentaPorId(cuentaId);
 
         if (cuenta.payed()) {
             throw new IllegalArgumentException("La cuenta ya está pagada");
+        }
+
+        if (metodoPago == null) {
+            throw new IllegalArgumentException("El método de pago es obligatorio");
         }
 
         Cuenta actualizada = new Cuenta(
@@ -87,7 +92,8 @@ public class PagoApplicationService {
                 cuenta.reserva(),
                 cuenta.fechaCreacion(),
                 Optional.of(Instant.now()),
-                ""
+                "",
+                Optional.of(metodoPago)
         );
 
         return cuentaRepository.update(cuenta.id(), actualizada);
@@ -111,7 +117,8 @@ public class PagoApplicationService {
                 cuenta.reserva(),
                 cuenta.fechaCreacion(),
                 Optional.of(Instant.now()),
-                ""
+                "",
+                cuenta.metodoPago()
         );
 
         return cuentaRepository.update(cuenta.id(), actualizada);

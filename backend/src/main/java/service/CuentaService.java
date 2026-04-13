@@ -52,7 +52,8 @@ public class CuentaService {
                 reserva,
                 Instant.now(),
                 Optional.empty(),
-                ""
+                "",
+                Optional.empty()
         );
 
         return repository.save(cuenta);

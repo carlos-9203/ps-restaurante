@@ -67,7 +67,8 @@ public class MesaApplicationService {
                 Optional.empty(),
                 Instant.now(),
                 Optional.empty(),
-                generarPassword()
+                generarPassword(),
+                Optional.empty()
         );
 
         return cuentaRepository.save(nuevaCuenta);
@@ -84,7 +85,8 @@ public class MesaApplicationService {
                 cuentaActiva.reserva(),
                 cuentaActiva.fechaCreacion(),
                 Optional.of(Instant.now()),
-                ""
+                "",
+                cuentaActiva.metodoPago()
         );
 
         return cuentaRepository.update(cuentaActiva.id(), cuentaLiberada);
