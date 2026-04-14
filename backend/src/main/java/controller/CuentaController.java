@@ -18,7 +18,6 @@ import java.util.Optional;
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class CuentaController {
-
     private final CuentaService service;
     private final PagoApplicationService pagoApplicationService;
 
@@ -75,6 +74,20 @@ public class CuentaController {
                             String id = ctx.pathParam("id");
                             List<Orden> ordenes = pagoApplicationService.obtenerOrdenesDeCuenta(id);
                             ctx.json(ordenes);
+                        });
+
+                        path("{ordenId}", () -> {
+                            delete(ctx -> {
+                                String cuentaId = ctx.pathParam("id");
+                                String ordenId = ctx.pathParam("ordenId");
+
+                                try {
+                                    pagoApplicationService.eliminarOrdenDeCuenta(cuentaId, ordenId);
+                                    ctx.status(204);
+                                } catch (IllegalArgumentException e) {
+                                    ctx.status(400).json(new ApiError(e.getMessage()));
+                                }
+                            });
                         });
                     });
 

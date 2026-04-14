@@ -5,7 +5,6 @@ import { forkJoin } from 'rxjs';
 import { MesaCardComponent } from '../../components/mesa-card/mesa-card';
 import { MesaDetalleComponent } from '../../components/mesa-detalle/mesa-detalle';
 import { NavbarComponent } from '../../components/navbar/navbar';
-
 import { Mesa, ZonaMesa } from '../../models/mesa.model';
 import { CuentaApiService, OrdenCuentaResponse } from '../../services/cuenta-api.service';
 import { MesasApiService } from '../../services/mesas-api.service';
@@ -18,6 +17,7 @@ interface ItemCobroAgrupado {
   cantidad: number;
   subtotal: number;
   estados: string[];
+  ordenesIds: string[];
 }
 
 @Component({
@@ -44,15 +44,15 @@ export class MesasComponent {
   readonly totalCobro = signal<number | null>(null);
   readonly cargandoCobro = signal(false);
   readonly procesandoCobro = signal(false);
-
   readonly resumenCobro = signal<ItemCobroAgrupado[]>([]);
   readonly metodoPago = signal<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   readonly importeRecibido = signal<number | null>(null);
+  readonly eliminandoOrdenId = signal<string | null>(null);
 
   readonly mesasActuales = computed(() =>
     this.mesas()
       .filter((mesa) => mesa.zona === this.zona())
-      .sort((a, b) => Number(a.id) - Number(b.id))
+      .sort((a, b) => Number(a.id) - Number(b.id)),
   );
 
   readonly cambioCobro = computed(() => {
@@ -84,7 +84,7 @@ export class MesasComponent {
   readonly puedeConfirmarCobro = computed(() => {
     const total = this.totalCobro();
 
-    if (total == null || this.procesandoCobro()) {
+    if (total == null || this.procesandoCobro() || this.eliminandoOrdenId() !== null) {
       return false;
     }
 
@@ -137,30 +137,10 @@ export class MesasComponent {
     this.resumenCobro.set([]);
     this.metodoPago.set('EFECTIVO');
     this.importeRecibido.set(null);
+    this.eliminandoOrdenId.set(null);
     this.mostrarModalCobro.set(true);
 
-    forkJoin({
-      total: this.mesasApi.obtenerTotalCuenta(payload.cuentaId),
-      ordenes: this.cuentaApi.obtenerOrdenesDeCuenta(payload.cuentaId),
-    }).subscribe({
-      next: ({ total, ordenes }) => {
-        console.log('TOTAL CUENTA:', total);
-        console.log('ORDENES CUENTA:', ordenes);
-
-        this.totalCobro.set(Number(total.importe));
-        this.resumenCobro.set(this.agruparOrdenes(ordenes));
-
-        console.log('RESUMEN AGRUPADO:', this.resumenCobro());
-
-        this.cargandoCobro.set(false);
-      },
-      error: (err) => {
-        console.error('Error obteniendo datos del cobro:', err);
-        this.cargandoCobro.set(false);
-        this.cerrarModalCobro();
-        this.error.set(this.extraerMensaje(err));
-      },
-    });
+    this.recargarResumenCobro();
   }
 
   confirmarCobro(): void {
@@ -191,6 +171,42 @@ export class MesasComponent {
     });
   }
 
+  eliminarUnaUnidad(item: ItemCobroAgrupado): void {
+    const cuentaId = this.cuentaCobroId();
+    const ordenId = item.ordenesIds[0];
+
+    if (!cuentaId || !ordenId || this.eliminandoOrdenId() !== null) {
+      return;
+    }
+
+    const confirmado = window.confirm(
+      `Vas a eliminar 1 unidad de "${item.nombre}" del recibo. Esta acción es manual y reducirá la cuenta. ¿Continuar?`,
+    );
+
+    if (!confirmado) {
+      return;
+    }
+
+    this.error.set(null);
+    this.eliminandoOrdenId.set(ordenId);
+
+    this.cuentaApi.eliminarOrdenDeCuenta(cuentaId, ordenId).subscribe({
+      next: () => {
+        this.eliminandoOrdenId.set(null);
+        this.recargarResumenCobro();
+      },
+      error: (err) => {
+        console.error('Error eliminando orden de la cuenta:', err);
+        this.eliminandoOrdenId.set(null);
+        this.error.set(this.extraerMensaje(err));
+      },
+    });
+  }
+
+  puedeEliminarItem(item: ItemCobroAgrupado): boolean {
+    return item.ordenesIds.length > 0 && this.eliminandoOrdenId() === null && !this.procesandoCobro();
+  }
+
   cerrarModalCobro(): void {
     this.mostrarModalCobro.set(false);
     this.cargandoCobro.set(false);
@@ -201,6 +217,7 @@ export class MesasComponent {
     this.resumenCobro.set([]);
     this.metodoPago.set('EFECTIVO');
     this.importeRecibido.set(null);
+    this.eliminandoOrdenId.set(null);
   }
 
   cambiarMetodoPago(metodo: 'EFECTIVO' | 'TARJETA'): void {
@@ -233,6 +250,33 @@ export class MesasComponent {
     return unicos.join(' · ');
   }
 
+  private recargarResumenCobro(): void {
+    const cuentaId = this.cuentaCobroId();
+
+    if (!cuentaId) {
+      return;
+    }
+
+    this.cargandoCobro.set(true);
+
+    forkJoin({
+      total: this.mesasApi.obtenerTotalCuenta(cuentaId),
+      ordenes: this.cuentaApi.obtenerOrdenesDeCuenta(cuentaId),
+    }).subscribe({
+      next: ({ total, ordenes }) => {
+        this.totalCobro.set(Number(total.importe));
+        this.resumenCobro.set(this.agruparOrdenes(ordenes));
+        this.cargandoCobro.set(false);
+      },
+      error: (err) => {
+        console.error('Error obteniendo datos del cobro:', err);
+        this.cargandoCobro.set(false);
+        this.cerrarModalCobro();
+        this.error.set(this.extraerMensaje(err));
+      },
+    });
+  }
+
   private agruparOrdenes(ordenes: OrdenCuentaResponse[]): ItemCobroAgrupado[] {
     const mapa = new Map<string, ItemCobroAgrupado>();
 
@@ -252,6 +296,7 @@ export class MesasComponent {
           cantidad: 0,
           subtotal: 0,
           estados: [],
+          ordenesIds: [],
         });
       }
 
@@ -262,10 +307,14 @@ export class MesasComponent {
       if (orden.ordenEstado) {
         item.estados.push(orden.ordenEstado);
       }
+
+      if (orden.id) {
+        item.ordenesIds.push(orden.id);
+      }
     }
 
     return Array.from(mapa.values()).sort((a, b) =>
-      a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
+      a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }),
     );
   }
 
@@ -286,6 +335,7 @@ export class MesasComponent {
         }
 
         const seleccionActual = this.mesaSeleccionada();
+
         if (!seleccionActual) {
           return;
         }

@@ -67,7 +67,7 @@
         <aside class="detalle-columna">
           <app-mesa-detalle
             [mesa]="mesaSel"
-            [accionEnCurso]="accionMesaId() === mesaSel.id || procesandoCobro()"
+            [accionEnCurso]="accionMesaId() === mesaSel.id || procesandoCobro() || eliminandoOrdenId() !== null"
             (ocupar)="ocuparMesa($event)"
             (cobrar)="abrirCobro($event)">
           </app-mesa-detalle>
@@ -112,6 +112,20 @@
                             Estado:
                             {{ item.estados.length ? obtenerResumenEstado(item.estados) : 'Sin estado' }}
                           </small>
+
+                          <div class="modal-resumen-item__acciones">
+                            <button
+                              type="button"
+                              class="modal-btn modal-btn--secundario modal-btn--eliminar-linea"
+                              (click)="eliminarUnaUnidad(item)"
+                              [disabled]="!puedeEliminarItem(item)">
+                              {{
+                                eliminandoOrdenId() === item.ordenesIds[0]
+                                  ? 'Eliminando...'
+                                  : 'Eliminar 1 unidad'
+                              }}
+                            </button>
+                          </div>
                         </div>
 
                         <div class="modal-resumen-item__subtotal">
@@ -134,7 +148,7 @@
                     class="modal-metodo-pago__btn"
                     [class.active]="metodoPago() === 'EFECTIVO'"
                     (click)="cambiarMetodoPago('EFECTIVO')"
-                    [disabled]="procesandoCobro()">
+                    [disabled]="procesandoCobro() || eliminandoOrdenId() !== null">
                     Efectivo
                   </button>
 
@@ -143,7 +157,7 @@
                     class="modal-metodo-pago__btn"
                     [class.active]="metodoPago() === 'TARJETA'"
                     (click)="cambiarMetodoPago('TARJETA')"
-                    [disabled]="procesandoCobro()">
+                    [disabled]="procesandoCobro() || eliminandoOrdenId() !== null">
                     Tarjeta
                   </button>
                 </div>
@@ -161,7 +175,7 @@
                     step="0.01"
                     [value]="importeRecibido() ?? ''"
                     (input)="actualizarImporteRecibido($any($event.target).value)"
-                    [disabled]="procesandoCobro()"
+                    [disabled]="procesandoCobro() || eliminandoOrdenId() !== null"
                     placeholder="Introduce el importe recibido" />
 
                   @if (importeRecibido() != null && faltaCobro() != null && faltaCobro()! > 0) {
@@ -204,7 +218,7 @@
                   type="button"
                   class="modal-btn modal-btn--secundario"
                   (click)="cerrarModalCobro()"
-                  [disabled]="procesandoCobro()">
+                  [disabled]="procesandoCobro() || eliminandoOrdenId() !== null">
                   Cancelar
                 </button>
 
@@ -213,9 +227,9 @@
                   class="modal-btn modal-btn--principal"
                   (click)="confirmarCobro()"
                   [disabled]="!puedeConfirmarCobro()">
-          <span class="modal-btn__label">
-            {{ procesandoCobro() ? 'Cobrando...' : 'Confirmar pago' }}
-          </span>
+                  <span class="modal-btn__label">
+                    {{ procesandoCobro() ? 'Cobrando...' : 'Confirmar pago' }}
+                  </span>
                 </button>
               </div>
             </div>

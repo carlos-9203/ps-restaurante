@@ -3,7 +3,9 @@ package service.application;
 import model.Cuenta;
 import model.MetodoPago;
 import model.Orden;
+import model.OrdenEstado;
 import model.Pedido;
+import model.PedidoEstado;
 import repository.interfaces.CuentaRepository;
 import repository.interfaces.OrdenRepository;
 import repository.interfaces.PedidoRepository;
@@ -14,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class PagoApplicationService {
-
     private final CuentaRepository cuentaRepository;
     private final PedidoRepository pedidoRepository;
     private final OrdenRepository ordenRepository;
@@ -36,21 +37,14 @@ public class PagoApplicationService {
 
     public List<Pedido> obtenerPedidosDeCuenta(String cuentaId) {
         Cuenta cuenta = obtenerCuentaPorId(cuentaId);
-
-        return pedidoRepository.findAll().stream()
-                .filter(pedido -> pedido.cuenta() != null)
-                .filter(pedido -> pedido.cuenta().id() != null)
-                .filter(pedido -> pedido.cuenta().id().equals(cuenta.id()))
-                .toList();
+        return pedidoRepository.findByCuenta(cuenta);
     }
 
     public List<Orden> obtenerOrdenesDeCuenta(String cuentaId) {
         List<Pedido> pedidos = obtenerPedidosDeCuenta(cuentaId);
 
-        return ordenRepository.findAll().stream()
-                .filter(orden -> orden.pedido() != null)
-                .filter(orden -> orden.pedido().id() != null)
-                .filter(orden -> pedidos.stream().anyMatch(p -> p.id().equals(orden.pedido().id())))
+        return pedidos.stream()
+                .flatMap(pedido -> ordenRepository.findByPedido(pedido).stream())
                 .toList();
     }
 
@@ -122,5 +116,49 @@ public class PagoApplicationService {
         );
 
         return cuentaRepository.update(cuenta.id(), actualizada);
+    }
+
+    public void eliminarOrdenDeCuenta(String cuentaId, String ordenId) {
+        Cuenta cuenta = obtenerCuentaPorId(cuentaId);
+
+        if (cuenta.payed()) {
+            throw new IllegalArgumentException("No se pueden eliminar platos de una cuenta ya pagada");
+        }
+
+        Orden orden = ordenRepository.findById(ordenId)
+                .orElseThrow(() -> new IllegalArgumentException("La orden no existe"));
+
+        if (orden.pedido() == null || orden.pedido().id() == null) {
+            throw new IllegalArgumentException("La orden no tiene pedido asociado");
+        }
+
+        Pedido pedido = pedidoRepository.findById(orden.pedido().id())
+                .orElseThrow(() -> new IllegalArgumentException("El pedido asociado a la orden no existe"));
+
+        if (pedido.cuenta() == null || pedido.cuenta().id() == null || !pedido.cuenta().id().equals(cuentaId)) {
+            throw new IllegalArgumentException("La orden no pertenece a esa cuenta");
+        }
+
+        ordenRepository.deleteById(orden.id());
+
+        List<Orden> ordenesRestantesDelPedido = ordenRepository.findByPedido(pedido);
+
+        if (ordenesRestantesDelPedido.isEmpty()) {
+            pedidoRepository.deleteById(pedido.id());
+            return;
+        }
+
+        boolean todasListasOEntregadas = ordenesRestantesDelPedido.stream().allMatch(o ->
+                o.ordenEstado() == OrdenEstado.Listo || o.ordenEstado() == OrdenEstado.Entregado
+        );
+
+        Pedido pedidoActualizado = new Pedido(
+                pedido.id(),
+                pedido.cuenta(),
+                todasListasOEntregadas ? PedidoEstado.Listo : PedidoEstado.Pendiente,
+                pedido.fechaPedido()
+        );
+
+        pedidoRepository.update(pedido.id(), pedidoActualizado);
     }
 }

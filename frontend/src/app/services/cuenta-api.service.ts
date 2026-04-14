@@ -75,4 +75,8 @@ export class CuentaApiService {
   obtenerEstadoSaldada(cuentaId: string): Observable<EstadoCuentaResponse> {
     return this.http.get<EstadoCuentaResponse>(`${this.apiUrl}/cuentas/${cuentaId}/saldada`);
   }
+
+  eliminarOrdenDeCuenta(cuentaId: string, ordenId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/cuentas/${cuentaId}/ordenes/${ordenId}`);
+  }
 }
