@@ -116,14 +116,12 @@
                           <div class="modal-resumen-item__acciones">
                             <button
                               type="button"
-                              class="modal-btn modal-btn--secundario modal-btn--eliminar-linea"
+                              class="btn-eliminar-x"
                               (click)="eliminarUnaUnidad(item)"
-                              [disabled]="!puedeEliminarItem(item)">
-                              {{
-                                eliminandoOrdenId() === item.ordenesIds[0]
-                                  ? 'Eliminando...'
-                                  : 'Eliminar 1 unidad'
-                              }}
+                              [disabled]="!puedeEliminarItem(item)"
+                              [attr.aria-label]="'Eliminar una unidad de ' + item.nombre"
+                              title="Eliminar una unidad">
+                              {{ eliminandoOrdenId() === item.ordenesIds[0] ? '...' : '×' }}
                             </button>
                           </div>
                         </div>

@@ -260,8 +260,14 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
-  padding-bottom: 14px;
+  padding: 10px 2px 14px 2px;
   border-bottom: 1px solid #eeeeee;
+  transition: background-color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  border-radius: 12px;
+}
+
+.modal-resumen-item:hover {
+  background: #fcfcfc;
 }
 
 .modal-resumen-item:last-child {
@@ -302,6 +308,49 @@
   color: #141414;
   white-space: nowrap;
   align-self: start;
+  padding-top: 2px;
+}
+
+.modal-resumen-item__acciones {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+}
+
+/* NUEVO: botón X pro */
+.btn-eliminar-x {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 999px;
+  background: #ffe9e9;
+  color: #c62828;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 16px/1 inherit;
+  cursor: pointer;
+  padding: 0;
+  min-width: 26px;
+  box-sizing: border-box;
+  transition: background-color .16s ease, transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+
+.btn-eliminar-x:hover:not(:disabled) {
+  background: #ffd6d6;
+  transform: scale(1.06);
+  box-shadow: 0 4px 10px rgba(198, 40, 40, 0.15);
+}
+
+.btn-eliminar-x:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.btn-eliminar-x:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .modal-resumen-lista::-webkit-scrollbar {
@@ -478,12 +527,7 @@
   cursor: not-allowed;
 }
 
-.modal-btn__label {
-  color: inherit;
-  font: inherit;
-  line-height: 1;
-  pointer-events: none;
-}
+
 
 /* =========================
    RESPONSIVE
@@ -533,6 +577,11 @@
 
   .modal-resumen {
     height: 320px;
+  }
+
+  .modal-resumen-item__acciones {
+    opacity: 1;
+    transform: none;
   }
 }
 
