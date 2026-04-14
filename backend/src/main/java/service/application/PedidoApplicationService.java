@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PedidoApplicationService {
-
     private final PedidoRepository pedidoRepository;
     private final CuentaRepository cuentaRepository;
     private final OrdenRepository ordenRepository;
@@ -81,13 +80,7 @@ public class PedidoApplicationService {
             throw new IllegalArgumentException("No se puede crear un pedido en una cuenta pagada");
         }
 
-        Pedido pedido = new Pedido(
-                null,
-                cuenta,
-                PedidoEstado.Pendiente,
-                Instant.now()
-        );
-
+        Pedido pedido = new Pedido(null, cuenta, PedidoEstado.Pendiente, Instant.now());
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
         List<Orden> ordenesCreadas = new ArrayList<>();
@@ -139,11 +132,7 @@ public class PedidoApplicationService {
         Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new IllegalArgumentException("La cuenta no existe"));
 
-        return pedidoRepository.findAll().stream()
-                .filter(pedido -> pedido.cuenta() != null)
-                .filter(pedido -> pedido.cuenta().id() != null)
-                .filter(pedido -> pedido.cuenta().id().equals(cuenta.id()))
-                .toList();
+        return pedidoRepository.findByCuenta(cuenta);
     }
 
     public List<Pedido> obtenerPedidosActivosDeMesa(String mesaId) {
@@ -156,13 +145,10 @@ public class PedidoApplicationService {
     public Pedido recalcularEstadoPedido(String pedidoId) {
         Pedido pedido = obtenerPedidoPorId(pedidoId);
 
-        List<Orden> ordenes = ordenRepository.findAll().stream()
-                .filter(orden -> orden.pedido() != null)
-                .filter(orden -> orden.pedido().id() != null)
-                .filter(orden -> orden.pedido().id().equals(pedido.id()))
-                .toList();
+        List<Orden> ordenes = ordenRepository.findByPedido(pedido);
 
-        boolean todasListasOEntregadas = !ordenes.isEmpty() && ordenes.stream().allMatch(o ->
+        boolean todasListasOEntregadas = !ordenes.isEmpty()
+                && ordenes.stream().allMatch(o ->
                 o.ordenEstado() == OrdenEstado.Listo || o.ordenEstado() == OrdenEstado.Entregado
         );
 
@@ -185,7 +171,6 @@ public class PedidoApplicationService {
         if (request == null) {
             throw new IllegalArgumentException("El cuerpo de la petición no puede ser nulo");
         }
-
         if (request.items == null || request.items.isEmpty()) {
             throw new IllegalArgumentException("Debes indicar al menos un plato");
         }
@@ -195,11 +180,9 @@ public class PedidoApplicationService {
         if (item == null) {
             throw new IllegalArgumentException("Uno de los items del pedido es nulo");
         }
-
         if (item.platoId == null || item.platoId.isBlank()) {
             throw new IllegalArgumentException("Todos los items deben tener platoId");
         }
-
         if (item.cantidad == null || item.cantidad <= 0) {
             throw new IllegalArgumentException("La cantidad de cada plato debe ser mayor que 0");
         }

@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class OrdenApplicationService {
-
     private final OrdenRepository ordenRepository;
     private final PedidoRepository pedidoRepository;
     private final PlatoRepository platoRepository;
@@ -107,34 +106,28 @@ public class OrdenApplicationService {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
 
-        return ordenRepository.findAll().stream()
-                .filter(orden -> orden.pedido() != null)
-                .filter(orden -> orden.pedido().id() != null)
-                .filter(orden -> orden.pedido().id().equals(pedido.id()))
+        return ordenRepository.findByPedido(pedido).stream()
                 .map(this::hidratarOrden)
                 .toList();
     }
 
     public List<Orden> obtenerOrdenesPendientes() {
-        return ordenRepository.findAll().stream()
+        return ordenRepository.findByEstado(OrdenEstado.Pendiente).stream()
                 .map(this::hidratarOrden)
-                .filter(orden -> orden.ordenEstado() == OrdenEstado.Pendiente)
                 .filter(this::cuentaNoPagadaYaHidratada)
                 .toList();
     }
 
     public List<Orden> obtenerOrdenesEnPreparacion() {
-        return ordenRepository.findAll().stream()
+        return ordenRepository.findByEstado(OrdenEstado.Preparación).stream()
                 .map(this::hidratarOrden)
-                .filter(orden -> orden.ordenEstado() == OrdenEstado.Preparación)
                 .filter(this::cuentaNoPagadaYaHidratada)
                 .toList();
     }
 
     public List<Orden> obtenerOrdenesListas() {
-        return ordenRepository.findAll().stream()
+        return ordenRepository.findByEstado(OrdenEstado.Listo).stream()
                 .map(this::hidratarOrden)
-                .filter(orden -> orden.ordenEstado() == OrdenEstado.Listo)
                 .filter(this::cuentaNoPagadaYaHidratada)
                 .toList();
     }
@@ -164,12 +157,18 @@ public class OrdenApplicationService {
     }
 
     public List<Orden> obtenerOrdenesSalaPlatos() {
-        return ordenRepository.findAll().stream()
+        List<Orden> listas = ordenRepository.findByEstado(OrdenEstado.Listo);
+        List<Orden> entregadas = ordenRepository.findByEstado(OrdenEstado.Entregado);
+
+        List<Orden> combinadas = new ArrayList<>();
+        combinadas.addAll(listas);
+        combinadas.addAll(entregadas);
+
+        return combinadas.stream()
                 .map(this::hidratarOrden)
                 .filter(orden -> orden.plato() != null)
                 .filter(orden -> orden.plato().categoria() != null)
                 .filter(orden -> orden.plato().categoria() != Categoria.Bebida)
-                .filter(orden -> orden.ordenEstado() == OrdenEstado.Listo || orden.ordenEstado() == OrdenEstado.Entregado)
                 .filter(this::cuentaNoPagadaYaHidratada)
                 .sorted((a, b) -> {
                     Instant fechaPedidoA = a.pedido() != null ? a.pedido().fechaPedido() : a.fecha();
@@ -254,15 +253,21 @@ public class OrdenApplicationService {
     public boolean estanTodasListasLasOrdenes(String pedidoId) {
         List<Orden> ordenes = obtenerOrdenesDePedido(pedidoId);
 
-        return !ordenes.isEmpty() && ordenes.stream().allMatch(orden ->
+        return !ordenes.isEmpty()
+                && ordenes.stream().allMatch(orden ->
                 orden.ordenEstado() == OrdenEstado.Listo || orden.ordenEstado() == OrdenEstado.Entregado
         );
     }
 
     private List<Orden> obtenerOrdenesCocinaPorEstados(List<OrdenEstado> estados) {
-        return ordenRepository.findAll().stream()
+        List<Orden> acumuladas = new ArrayList<>();
+
+        for (OrdenEstado estado : estados) {
+            acumuladas.addAll(ordenRepository.findByEstado(estado));
+        }
+
+        return acumuladas.stream()
                 .map(this::hidratarOrden)
-                .filter(orden -> estados.contains(orden.ordenEstado()))
                 .filter(orden -> orden.plato() != null)
                 .filter(orden -> orden.plato().categoria() != null)
                 .filter(orden -> orden.plato().categoria() != Categoria.Bebida)
@@ -272,9 +277,14 @@ public class OrdenApplicationService {
     }
 
     private List<Orden> obtenerOrdenesBarraPorEstados(List<OrdenEstado> estados) {
-        return ordenRepository.findAll().stream()
+        List<Orden> acumuladas = new ArrayList<>();
+
+        for (OrdenEstado estado : estados) {
+            acumuladas.addAll(ordenRepository.findByEstado(estado));
+        }
+
+        return acumuladas.stream()
                 .map(this::hidratarOrden)
-                .filter(orden -> estados.contains(orden.ordenEstado()))
                 .filter(orden -> orden.plato() != null)
                 .filter(orden -> orden.plato().categoria() != null)
                 .filter(orden -> orden.plato().categoria() == Categoria.Bebida)
@@ -291,7 +301,6 @@ public class OrdenApplicationService {
         if (orden == null || orden.pedido() == null || orden.pedido().cuenta() == null) {
             return true;
         }
-
         return !orden.pedido().cuenta().payed();
     }
 

@@ -99,13 +99,7 @@ public class MesaApplicationService {
             return List.of();
         }
 
-        String cuentaId = cuentaActiva.get().id();
-
-        return pedidoRepository.findAll().stream()
-                .filter(pedido -> pedido.cuenta() != null)
-                .filter(pedido -> pedido.cuenta().id() != null)
-                .filter(pedido -> pedido.cuenta().id().equals(cuentaId))
-                .toList();
+        return pedidoRepository.findByCuenta(cuentaActiva.get());
     }
 
     public List<Orden> obtenerOrdenesActivasDeMesa(String mesaId) {
@@ -113,13 +107,7 @@ public class MesaApplicationService {
         List<Orden> ordenes = new ArrayList<>();
 
         for (Pedido pedido : pedidos) {
-            List<Orden> ordenesPedido = ordenRepository.findAll().stream()
-                    .filter(orden -> orden.pedido() != null)
-                    .filter(orden -> orden.pedido().id() != null)
-                    .filter(orden -> orden.pedido().id().equals(pedido.id()))
-                    .toList();
-
-            ordenes.addAll(ordenesPedido);
+            ordenes.addAll(ordenRepository.findByPedido(pedido));
         }
 
         return ordenes;
