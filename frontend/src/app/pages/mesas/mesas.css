@@ -328,7 +328,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font: 700 16px/1 inherit;
+
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  font-family: inherit;
+
   cursor: pointer;
   padding: 0;
   min-width: 26px;
