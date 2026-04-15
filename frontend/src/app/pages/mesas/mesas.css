@@ -257,10 +257,11 @@
 }
 
 .modal-resumen-item {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
-  padding: 10px 2px 14px 2px;
+  padding: 10px 40px 14px 2px;
   border-bottom: 1px solid #eeeeee;
   transition: background-color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
   border-radius: 12px;
@@ -309,10 +310,13 @@
   white-space: nowrap;
   align-self: start;
   padding-top: 2px;
+  padding-right: 6px;
 }
 
 .modal-resumen-item__acciones {
-  margin-top: 6px;
+  position: absolute;
+  top: 6px;
+  right: 0;
   display: flex;
   align-items: center;
 }
