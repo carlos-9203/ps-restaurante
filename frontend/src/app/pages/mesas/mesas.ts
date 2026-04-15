@@ -49,6 +49,9 @@ export class MesasComponent {
   readonly importeRecibido = signal<number | null>(null);
   readonly eliminandoOrdenId = signal<string | null>(null);
 
+  readonly mostrarConfirmacionEliminar = signal(false);
+  readonly itemPendienteEliminar = signal<ItemCobroAgrupado | null>(null);
+
   readonly mesasActuales = computed(() =>
     this.mesas()
       .filter((mesa) => mesa.zona === this.zona())
@@ -84,7 +87,12 @@ export class MesasComponent {
   readonly puedeConfirmarCobro = computed(() => {
     const total = this.totalCobro();
 
-    if (total == null || this.procesandoCobro() || this.eliminandoOrdenId() !== null) {
+    if (
+      total == null ||
+      this.procesandoCobro() ||
+      this.eliminandoOrdenId() !== null ||
+      this.mostrarConfirmacionEliminar()
+    ) {
       return false;
     }
 
@@ -138,6 +146,8 @@ export class MesasComponent {
     this.metodoPago.set('EFECTIVO');
     this.importeRecibido.set(null);
     this.eliminandoOrdenId.set(null);
+    this.mostrarConfirmacionEliminar.set(false);
+    this.itemPendienteEliminar.set(null);
     this.mostrarModalCobro.set(true);
 
     this.recargarResumenCobro();
@@ -172,18 +182,26 @@ export class MesasComponent {
   }
 
   eliminarUnaUnidad(item: ItemCobroAgrupado): void {
-    const cuentaId = this.cuentaCobroId();
-    const ordenId = item.ordenesIds[0];
-
-    if (!cuentaId || !ordenId || this.eliminandoOrdenId() !== null) {
+    if (!this.puedeEliminarItem(item)) {
       return;
     }
 
-    const confirmado = window.confirm(
-      `Vas a eliminar 1 unidad de "${item.nombre}" del recibo. Esta acción es manual y reducirá la cuenta. ¿Continuar?`,
-    );
+    this.itemPendienteEliminar.set(item);
+    this.mostrarConfirmacionEliminar.set(true);
+  }
 
-    if (!confirmado) {
+  cancelarConfirmacionEliminar(): void {
+    this.mostrarConfirmacionEliminar.set(false);
+    this.itemPendienteEliminar.set(null);
+  }
+
+  confirmarEliminarUnidad(): void {
+    const cuentaId = this.cuentaCobroId();
+    const item = this.itemPendienteEliminar();
+    const ordenId = item?.ordenesIds?.[0];
+
+    if (!cuentaId || !item || !ordenId || this.eliminandoOrdenId() !== null) {
+      this.cancelarConfirmacionEliminar();
       return;
     }
 
@@ -193,18 +211,25 @@ export class MesasComponent {
     this.cuentaApi.eliminarOrdenDeCuenta(cuentaId, ordenId).subscribe({
       next: () => {
         this.eliminandoOrdenId.set(null);
+        this.cancelarConfirmacionEliminar();
         this.recargarResumenCobro();
       },
       error: (err) => {
         console.error('Error eliminando orden de la cuenta:', err);
         this.eliminandoOrdenId.set(null);
+        this.cancelarConfirmacionEliminar();
         this.error.set(this.extraerMensaje(err));
       },
     });
   }
 
   puedeEliminarItem(item: ItemCobroAgrupado): boolean {
-    return item.ordenesIds.length > 0 && this.eliminandoOrdenId() === null && !this.procesandoCobro();
+    return (
+      item.ordenesIds.length > 0 &&
+      this.eliminandoOrdenId() === null &&
+      !this.procesandoCobro() &&
+      !this.mostrarConfirmacionEliminar()
+    );
   }
 
   cerrarModalCobro(): void {
@@ -218,6 +243,8 @@ export class MesasComponent {
     this.metodoPago.set('EFECTIVO');
     this.importeRecibido.set(null);
     this.eliminandoOrdenId.set(null);
+    this.mostrarConfirmacionEliminar.set(false);
+    this.itemPendienteEliminar.set(null);
   }
 
   cambiarMetodoPago(metodo: 'EFECTIVO' | 'TARJETA'): void {
