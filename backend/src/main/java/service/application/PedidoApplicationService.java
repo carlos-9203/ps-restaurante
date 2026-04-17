@@ -145,10 +145,12 @@ public class PedidoApplicationService {
     public Pedido recalcularEstadoPedido(String pedidoId) {
         Pedido pedido = obtenerPedidoPorId(pedidoId);
 
-        List<Orden> ordenes = ordenRepository.findByPedido(pedido);
+        List<Orden> ordenesActivas = ordenRepository.findByPedido(pedido).stream()
+                .filter(o -> o.ordenEstado() != OrdenEstado.Cancelado)
+                .toList();
 
-        boolean todasListasOEntregadas = !ordenes.isEmpty()
-                && ordenes.stream().allMatch(o ->
+        boolean todasListasOEntregadas = !ordenesActivas.isEmpty()
+                && ordenesActivas.stream().allMatch(o ->
                 o.ordenEstado() == OrdenEstado.Listo || o.ordenEstado() == OrdenEstado.Entregado
         );
 

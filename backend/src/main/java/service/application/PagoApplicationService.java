@@ -45,6 +45,7 @@ public class PagoApplicationService {
 
         return pedidos.stream()
                 .flatMap(pedido -> ordenRepository.findByPedido(pedido).stream())
+                .filter(orden -> orden.ordenEstado() != OrdenEstado.Cancelado)
                 .toList();
     }
 
@@ -139,16 +140,24 @@ public class PagoApplicationService {
             throw new IllegalArgumentException("La orden no pertenece a esa cuenta");
         }
 
-        ordenRepository.deleteById(orden.id());
+        Orden ordenCancelada = new Orden(
+                orden.id(),
+                orden.pedido(),
+                orden.plato(),
+                orden.precio(),
+                OrdenEstado.Cancelado,
+                orden.fecha(),
+                orden.detalles()
+        );
 
-        List<Orden> ordenesRestantesDelPedido = ordenRepository.findByPedido(pedido);
+        ordenRepository.update(orden.id(), ordenCancelada);
 
-        if (ordenesRestantesDelPedido.isEmpty()) {
-            pedidoRepository.deleteById(pedido.id());
-            return;
-        }
+        List<Orden> ordenesActivasDelPedido = ordenRepository.findByPedido(pedido).stream()
+                .filter(o -> o.ordenEstado() != OrdenEstado.Cancelado)
+                .toList();
 
-        boolean todasListasOEntregadas = ordenesRestantesDelPedido.stream().allMatch(o ->
+        boolean todasListasOEntregadas = !ordenesActivasDelPedido.isEmpty()
+                && ordenesActivasDelPedido.stream().allMatch(o ->
                 o.ordenEstado() == OrdenEstado.Listo || o.ordenEstado() == OrdenEstado.Entregado
         );
 

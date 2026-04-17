@@ -251,10 +251,12 @@ public class OrdenApplicationService {
     }
 
     public boolean estanTodasListasLasOrdenes(String pedidoId) {
-        List<Orden> ordenes = obtenerOrdenesDePedido(pedidoId);
+        List<Orden> ordenesActivas = obtenerOrdenesDePedido(pedidoId).stream()
+                .filter(orden -> orden.ordenEstado() != OrdenEstado.Cancelado)
+                .toList();
 
-        return !ordenes.isEmpty()
-                && ordenes.stream().allMatch(orden ->
+        return !ordenesActivas.isEmpty()
+                && ordenesActivas.stream().allMatch(orden ->
                 orden.ordenEstado() == OrdenEstado.Listo || orden.ordenEstado() == OrdenEstado.Entregado
         );
     }
