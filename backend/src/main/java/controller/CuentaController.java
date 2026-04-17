@@ -1,5 +1,6 @@
 package controller;
 
+import dto.CuentaPagadaResumenResponse;
 import dto.CuentaRequest;
 import dto.PagoCuentaRequest;
 import io.javalin.apibuilder.EndpointGroup;
@@ -8,10 +9,13 @@ import model.MetodoPago;
 import model.Orden;
 import model.Pedido;
 import service.CuentaService;
+import service.application.HistorialCuentasApplicationService;
 import service.application.PagoApplicationService;
 import util.ApiError;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,10 +24,16 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 public class CuentaController {
     private final CuentaService service;
     private final PagoApplicationService pagoApplicationService;
+    private final HistorialCuentasApplicationService historialService;
 
-    public CuentaController(CuentaService service, PagoApplicationService pagoApplicationService) {
+    public CuentaController(
+            CuentaService service,
+            PagoApplicationService pagoApplicationService,
+            HistorialCuentasApplicationService historialService
+    ) {
         this.service = service;
         this.pagoApplicationService = pagoApplicationService;
+        this.historialService = historialService;
     }
 
     public EndpointGroup routes() {
@@ -36,6 +46,25 @@ public class CuentaController {
                 });
 
                 get(ctx -> ctx.json(service.findAll()));
+
+                path("pagadas", () -> {
+                    get(ctx -> {
+                        String fechaRaw = ctx.queryParam("fecha");
+                        LocalDate fecha = null;
+
+                        if (fechaRaw != null && !fechaRaw.isBlank()) {
+                            try {
+                                fecha = LocalDate.parse(fechaRaw);
+                            } catch (DateTimeParseException e) {
+                                ctx.status(400).json(new ApiError("La fecha debe tener formato YYYY-MM-DD"));
+                                return;
+                            }
+                        }
+
+                        List<CuentaPagadaResumenResponse> resultado = historialService.obtenerCuentasPagadas(fecha);
+                        ctx.json(resultado);
+                    });
+                });
 
                 path("{id}", () -> {
                     get(ctx -> {

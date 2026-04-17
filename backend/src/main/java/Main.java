@@ -29,6 +29,7 @@ import service.OrdenService;
 import service.PedidoService;
 import service.PlatoService;
 import service.ReservaService;
+import service.application.HistorialCuentasApplicationService;
 import service.application.NotificacionApplicationService;
 import service.application.OrdenApplicationService;
 import service.application.PagoApplicationService;
@@ -101,10 +102,17 @@ public class Main {
                 cuentaRepository
         );
 
+        HistorialCuentasApplicationService historialCuentasApplicationService =
+                new HistorialCuentasApplicationService(cuentaRepository, pedidoRepository, ordenRepository);
+
         PlatoController platoController = new PlatoController(platoService);
         MesaController mesaController = new MesaController(mesaService, mesaApplicationService);
         ReservaController reservaController = new ReservaController(reservaService);
-        CuentaController cuentaController = new CuentaController(cuentaService, pagoApplicationService);
+        CuentaController cuentaController = new CuentaController(
+                cuentaService,
+                pagoApplicationService,
+                historialCuentasApplicationService
+        );
         PedidoController pedidoController = new PedidoController(pedidoService, pedidoApplicationService);
         OrdenController ordenController = new OrdenController(
                 ordenService,

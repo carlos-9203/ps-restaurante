@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { MesasComponent } from './pages/mesas/mesas';
 import { BebidasComponent } from './pages/bebidas/bebidas';
 import { PlatosComponent } from './pages/platos/platos';
+import { HistorialComponent } from './pages/historial/historial';
 import { tableAccessGuard } from './guards/table-access.guard';
 import { TableLogin } from './feature/access/table-login/table-login';
 import { QrGenerator } from './feature/admin/qr-generator/qr-generator';
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'mesas', component: MesasComponent },
   { path: 'bebidas', component: BebidasComponent },
   { path: 'platos', component: PlatosComponent },
+  { path: 'historial', component: HistorialComponent },
   { path: 'acceso/:id', component: TableLogin },
   { path: 'admin/generar-qr', component: QrGenerator },
   { path: 'menu/:id', component: MenuPage, canActivate: [tableAccessGuard] },
